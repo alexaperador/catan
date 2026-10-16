@@ -1,5 +1,5 @@
 package catan;
 
-public class Carretera implements Construccio{
+public class Carretera extends Construccio{
     Aresta aresta;
 }

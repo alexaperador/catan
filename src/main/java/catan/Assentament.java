@@ -1,4 +1,3 @@
-
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -21,13 +20,30 @@ import jakarta.validation.constraints.Size;
 
 
 
+
+
 @Entity
-@Table(name = "Construccio")
+@Table(name = "Assentament")
 @Inheritance(strategy = InheritanceType.JOINED)
 
-public abstract class Construccio{
+public abstract class Assentament extends Construccio{
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    int id;
+    @Column(name = "vertex")
+    Vertex vertex;
+
+
+    protected Assentament(){
+
+    }
+
+    public Assentament(Vertex vertex) {
+        this.vertex = vertex;
+    }
+
+
+
+    
+    
 }
