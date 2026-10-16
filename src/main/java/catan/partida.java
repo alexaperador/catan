@@ -1,6 +1,7 @@
 package catan;
 
 import java.lang.annotation.Inherited;
+import java.time.LocalDate;
 
 import javax.annotation.processing.Generated;
 
@@ -19,6 +20,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -27,8 +29,8 @@ import jakarta.validation.constraints.Size;
 @Entity
 @Table(name = "Partida")
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(lenth = 30)
-public abstract class partida {
+@DiscriminatorColumn(length = 30)
+public abstract class Partida {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,14 +40,14 @@ public abstract class partida {
     @NotNull(message = "El estat és obligatori")
 	@Enumerated(EnumType.STRING)
 	@Column(name = "estat", nullable = false, length = 10)
-    private estatPartida estat;
+    private EstatPartida estat;
     
     @NotNull(message = "La data d'inici és obligatòria")
 	@PastOrPresent(message = "La data de llançament no pot ser futura")
 	@Column(name = "data_inici", nullable = false)
     private LocalDate dataInici;
 
-    @Min(value = 1)
+    @Min (value = 1)
     @Column(name = "ronda")
     private Integer ronda;
 
