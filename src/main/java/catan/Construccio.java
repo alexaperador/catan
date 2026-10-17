@@ -1,3 +1,4 @@
+package catan;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
