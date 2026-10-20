@@ -5,34 +5,26 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
+
 
 @Entity
 @Table(name = "Vertex")
-@Inheritance(strategy = InheritanceType.JOINED)
-
-
-
-public class Vertex extends Assentament{
-    
-
+public class Vertex {
+    public int getId() {
+        return id;
+    }
+    public int getCodi() {
+        return codi;
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Vertex")
-    
-    int id;
-    int codi;
+    private int id;
 
+    @Column(name = "codi", nullable = false)
+    private int codi;
 
-    protected Vertex(){
-
-    }
-
-    public Vertex (int id, int codi){
-        this.id = id;
-        this.codi = codi;
-    }
+    protected Vertex() {}
+    public Vertex(int codi) { this.codi = codi; }
 
 }
