@@ -37,7 +37,7 @@ public class Partida {
     private EstatPartida estat;
 
     @NotNull(message = "La data d'inici és obligatòria")
-    @PastOrPresent(message = "La data de llançament no pot ser futura")
+    @PastOrPresent(message = "La data d'inici no pot ser futura")
     @Column(name = "data_inici", nullable = false)
     private LocalDate dataInici;
 
@@ -71,6 +71,130 @@ public class Partida {
     @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartaDesenvolupament> pila = new ArrayList<>();
 
-    
-    
+    @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Hexagon> tauler = new ArrayList<>();
+
+    @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Vertex> vertexs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Aresta> arestes = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lladre_id", nullable = true)
+    private Hexagon lladre;
+
+    protected Partida() {
+    }
+
+    public Partida(EstatPartida estat, LocalDate dataInici, Integer ronda, Integer ultimaTirada,
+            Integer puntsPerGuanyar, Boolean dausTirats, Boolean lladrePendent) {
+        this.estat = estat;
+        this.dataInici = dataInici;
+        this.ronda = ronda;
+        this.ultimaTirada = ultimaTirada;
+        this.puntsPerGuanyar = puntsPerGuanyar;
+        this.dausTirats = dausTirats;
+        this.lladrePendent = lladrePendent;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public EstatPartida getEstat() {
+        return estat;
+    }
+
+    public void setEstat(EstatPartida estat) {
+        this.estat = estat;
+    }
+
+    public LocalDate getDataInici() {
+        return dataInici;
+    }
+
+    public void setDataInici(LocalDate dataInici) {
+        this.dataInici = dataInici;
+    }
+
+    public Integer getRonda() {
+        return ronda;
+    }
+
+    public void setRonda(Integer ronda) {
+        this.ronda = ronda;
+    }
+
+    public Integer getUltimaTirada() {
+        return ultimaTirada;
+    }
+
+    public void setUltimaTirada(Integer ultimaTirada) {
+        this.ultimaTirada = ultimaTirada;
+    }
+
+    public Integer getPuntsPerGuanyar() {
+        return puntsPerGuanyar;
+    }
+
+    public void setPuntsPerGuanyar(Integer puntsPerGuanyar) {
+        this.puntsPerGuanyar = puntsPerGuanyar;
+    }
+
+    public Boolean getDausTirats() {
+        return dausTirats;
+    }
+
+    public void setDausTirats(Boolean dausTirats) {
+        this.dausTirats = dausTirats;
+    }
+
+    public Boolean getLladrePendent() {
+        return lladrePendent;
+    }
+
+    public void setLladrePendent(Boolean lladrePendent) {
+        this.lladrePendent = lladrePendent;
+    }
+
+    public List<Jugador> getJugadors() {
+        return jugadors;
+    }
+
+    public void setJugadors(List<Jugador> jugadors) {
+        this.jugadors = jugadors;
+    }
+
+    public Jugador getActiu() {
+        return actiu;
+    }
+
+    public void setActiu(Jugador actiu) {
+        this.actiu = actiu;
+    }
+
+    public Jugador getGuanyador() {
+        return guanyador;
+    }
+
+    public void setGuanyador(Jugador guanyador) {
+        this.guanyador = guanyador;
+    }
+
+    public List<CartaDesenvolupament> getPila() {
+        return pila;
+    }
+
+    public void setPila(List<CartaDesenvolupament> pila) {
+        this.pila = pila;
+    }
+
+    public Hexagon getLladre() {
+        return lladre;
+    }
+
+    public void setLladre(Hexagon lladre) {
+        this.lladre = lladre;
+    }
 }
