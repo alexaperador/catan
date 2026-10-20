@@ -23,7 +23,6 @@ public abstract class Assentament extends Construccio{
     @Column(name = "Vertex")
     Vertex vertex;
 
-
     protected Assentament(){
 
     }

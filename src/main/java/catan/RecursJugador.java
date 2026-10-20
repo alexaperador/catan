@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -15,6 +16,7 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(name = "recursos_jugador", uniqueConstraints = @UniqueConstraint(columnNames = { "jugador_id", "tipus" }))
 public class RecursJugador {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -27,6 +29,45 @@ public class RecursJugador {
     private int quantitat;
 
     @ManyToOne(optional = false)
-    @jakarta.persistence.JoinColumn(name = "jugador_id", nullable = false)
+    @JoinColumn(name = "jugador_id", nullable = false)
     private Jugador jugador;
+
+    public RecursJugador() {
+    }
+
+    public RecursJugador(Jugador jugador, int quantitat, TipusRecurs tipusRecurs) {
+        this.jugador = jugador;
+        this.quantitat = quantitat;
+        this.tipusRecurs = tipusRecurs;
+    }
+
+        public TipusRecurs getTipusRecurs() {
+        return tipusRecurs;
+    }
+
+    public void setTipusRecurs(TipusRecurs tipusRecurs) {
+        this.tipusRecurs = tipusRecurs;
+    }
+
+    public int getQuantitat() {
+        return quantitat;
+    }
+
+    public void setQuantitat(int quantitat) {
+        this.quantitat = quantitat;
+    }
+
+    public Jugador getJugador() {
+        return jugador;
+    }
+
+    public void setJugador(Jugador jugador) {
+        this.jugador = jugador;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    
 }

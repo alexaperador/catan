@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -22,13 +23,14 @@ public class Aresta extends Carretera{
 
     int id;
     int codi;
+
+    @ManyToOne 
+    private Partida partida;
     
     public int getId() {
         return id;
     }
-    public void setId(int id) {
-        this.id = id;
-    }
+
     public int getCodi() {
         return codi;
     }
@@ -36,14 +38,11 @@ public class Aresta extends Carretera{
         this.codi = codi;
     }
 
-
-
     protected Aresta(){
 
     }
 
-    public Aresta (int id, int codi){
-        this.id = id;
+    public Aresta ( int codi){
         this.codi = codi;
     }
 

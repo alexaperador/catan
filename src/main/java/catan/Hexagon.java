@@ -54,4 +54,69 @@ public abstract class Hexagon {
     @OneToMany(mappedBy = "hexagon", cascade = CascadeType.ALL)
     private List<HexagonVertex> HexagonVertexs = new ArrayList<>();
 
+    public Hexagon() {
+        
+    }
+
+    public Hexagon(Integer codi, Integer numero, int q, int r, TipusTerreny terreny, List<HexagonVertex> HexagonVertexs) {
+        this.codi = codi;
+        this.numero = numero;
+        this.q = q;
+        this.r = r;
+        this.terreny = terreny;
+        this.HexagonVertexs = HexagonVertexs;
+    }
+
+    public Integer getCodi() {
+        return codi;
+    }
+
+    public void setCodi(Integer codi) {
+        this.codi = codi;
+    }
+
+    public TipusTerreny getTerreny() {
+        return terreny;
+    }
+
+    public void setTerreny(TipusTerreny terreny) {
+        this.terreny = terreny;
+    }
+
+    public Integer getNumero() {
+        return numero;
+    }
+
+    public void setNumero(Integer numero) {
+        this.numero = numero;
+    }
+
+    public int getQ() {
+        return q;
+    }
+
+    public void setQ(int q) {
+        this.q = q;
+    }
+
+    public int getR() {
+        return r;
+    }
+
+    public void setR(int r) {
+        this.r = r;
+    }
+
+    public List<HexagonVertex> getHexagonVertexs() {
+        return HexagonVertexs;
+    }
+
+    public void setHexagonVertexs(List<HexagonVertex> HexagonVertexs) {
+        this.HexagonVertexs = HexagonVertexs;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
 }

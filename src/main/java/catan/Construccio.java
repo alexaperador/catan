@@ -8,8 +8,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
-    
-
 @Entity
 @Table(name = "Construccio")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -24,39 +22,26 @@ public abstract class Construccio{
 
     }
 
-
     protected Construccio(int id){
         this.id = id;
     }
-
 
     public int getId() {
         return id;
     }
 
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-
     @Override
     public boolean equals(Object obj) {
-        // TODO Auto-generated method stub
         return super.equals(obj);
     }
 
-
     @Override
     public int hashCode() {
-        // TODO Auto-generated method stub
         return super.hashCode();
     }
 
-
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
         return super.toString();
     }
 }

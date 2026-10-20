@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
@@ -29,12 +29,49 @@ public abstract class HexagonVertex {
     @Column(name = "posicio", nullable = false)
     private int posicio;
 
-    @OneToMany(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "hexagon_id", nullable = false)
 	private Hexagon hexagon;
 
-    @OneToMany(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "vertex_id", nullable = false)
 	private Vertex vertex;
+
+    public HexagonVertex() {
+    }
+
+    public HexagonVertex(Hexagon hexagon, int posicio, Vertex vertex) {
+        this.hexagon = hexagon;
+        this.posicio = posicio;
+        this.vertex = vertex;
+    }
+
+    public int getPosicio() {
+        return posicio;
+    }
+
+    public void setPosicio(int posicio) {
+        this.posicio = posicio;
+    }
+
+    public Hexagon getHexagon() {
+        return hexagon;
+    }
+
+    public void setHexagon(Hexagon hexagon) {
+        this.hexagon = hexagon;
+    }
+
+    public Vertex getVertex() {
+        return vertex;
+    }
+
+    public void setVertex(Vertex vertex) {
+        this.vertex = vertex;
+    }
+
+    public Integer getId() {
+        return id;
+    }
 
 }

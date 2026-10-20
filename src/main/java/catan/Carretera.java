@@ -24,6 +24,10 @@ public class Carretera extends Construccio{
     @Column(name = "Aresta")
     Aresta aresta;
 
+    public Aresta getAresta() {
+        return aresta;
+    }
+
     protected Carretera(){
 
     }
