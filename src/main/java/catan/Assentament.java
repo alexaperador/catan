@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 
 
 
-
 @Entity
 @Table(name = "Assentament")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -21,7 +20,7 @@ public abstract class Assentament extends Construccio{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Assentament")
+    @Column(name = "Vertex")
     Vertex vertex;
 
 

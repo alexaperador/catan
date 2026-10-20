@@ -16,12 +16,12 @@ import jakarta.persistence.Table;
 @Inheritance(strategy = InheritanceType.JOINED)
 
 
+
 public class Carretera extends Construccio{
-   
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Carretera")
-
+    @Column(name = "Aresta")
     Aresta aresta;
 
     protected Carretera(){

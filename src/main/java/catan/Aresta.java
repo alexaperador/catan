@@ -22,6 +22,20 @@ public class Aresta extends Carretera{
 
     int id;
     int codi;
+    
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public int getCodi() {
+        return codi;
+    }
+    public void setCodi(int codi) {
+        this.codi = codi;
+    }
+
 
 
     protected Aresta(){
