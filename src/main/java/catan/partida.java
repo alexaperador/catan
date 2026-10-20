@@ -54,7 +54,7 @@ public abstract class Partida {
     private Integer ultimaTirada;
 
     @Column(name = "punts_per_guanyar")
-    private Integer PuntsPerGuanyar;
+    private Integer puntsPerGuanyar;
 
     @Column(name = "daus_tirats")
     private Boolean dausTirats;
@@ -76,4 +76,100 @@ public abstract class Partida {
     @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartaDesenvolupament> pila = new ArrayList<>();
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public EstatPartida getEstat() {
+        return estat;
+    }
+
+    public void setEstat(EstatPartida estat) {
+        this.estat = estat;
+    }
+
+    public LocalDate getDataInici() {
+        return dataInici;
+    }
+
+    public void setDataInici(LocalDate dataInici) {
+        this.dataInici = dataInici;
+    }
+
+    public Integer getRonda() {
+        return ronda;
+    }
+
+    public void setRonda(Integer ronda) {
+        this.ronda = ronda;
+    }
+
+    public Integer getUltimaTirada() {
+        return ultimaTirada;
+    }
+
+    public void setUltimaTirada(Integer ultimaTirada) {
+        this.ultimaTirada = ultimaTirada;
+    }
+
+    public Integer getPuntsPerGuanyar() {
+        return puntsPerGuanyar;
+    }
+
+    public void setPuntsPerGuanyar(Integer puntsPerGuanyar) {
+        this.puntsPerGuanyar = puntsPerGuanyar;
+    }
+
+    public Boolean getDausTirats() {
+        return dausTirats;
+    }
+
+    public void setDausTirats(Boolean dausTirats) {
+        this.dausTirats = dausTirats;
+    }
+
+    public Boolean getLladrePendent() {
+        return lladrePendent;
+    }
+
+    public void setLladrePendent(Boolean lladrePendent) {
+        this.lladrePendent = lladrePendent;
+    }
+
+    public List<Jugador> getJugadors() {
+        return jugadors;
+    }
+
+    public void setJugadors(List<Jugador> jugadors) {
+        this.jugadors = jugadors;
+    }
+
+    public Jugador getActiu() {
+        return actiu;
+    }
+
+    public void setActiu(Jugador actiu) {
+        this.actiu = actiu;
+    }
+
+    public Jugador getGuanyador() {
+        return guanyador;
+    }
+
+    public void setGuanyador(Jugador guanyador) {
+        this.guanyador = guanyador;
+    }
+
+    public List<CartaDesenvolupament> getPila() {
+        return pila;
+    }
+
+    public void setPila(List<CartaDesenvolupament> pila) {
+        this.pila = pila;
+    }
+    
 }
