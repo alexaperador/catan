@@ -1,4 +1,8 @@
 package catan;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3c8b7851f329303d7f256921fc70c8ccf99f37d4
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

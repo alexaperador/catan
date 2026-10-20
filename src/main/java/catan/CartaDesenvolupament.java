@@ -8,6 +8,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -24,6 +26,14 @@ public class CartaDesenvolupament {
     @Column(name = "usada", nullable = false)
     private boolean usada;
 
-    @Column(name = "ronda_compra")
+    @Column(name = "ronda_compra", nullable = true)
     private Integer rondaCompra;
+
+    @ManyToOne
+    @JoinColumn(name = "jugador_id", nullable = false)
+    private Jugador jugador;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "partida_id", nullable = false)
+    private Partida partida;
 }

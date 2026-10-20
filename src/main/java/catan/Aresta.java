@@ -9,15 +9,28 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
+<<<<<<< HEAD
 
 @Entity
 @Table(name = "Aresta")
 @Inheritance(strategy = InheritanceType.JOINED)
+=======
+@Entity
+@Table(name = "Aresta")
+@Inheritance(strategy = InheritanceType.JOINED)
+
+
+>>>>>>> 3c8b7851f329303d7f256921fc70c8ccf99f37d4
 public class Aresta extends Carretera{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+<<<<<<< HEAD
     @Column(name = "id")
+=======
+    @Column(name = "Aresta")
+
+>>>>>>> 3c8b7851f329303d7f256921fc70c8ccf99f37d4
     int id;
     
     public int getId() {
@@ -37,4 +50,15 @@ public class Aresta extends Carretera{
         this.codi = codi;
     }
     int codi;
+
+
+    protected Aresta(){
+
+    }
+
+    public Aresta (int id, int codi){
+        this.id = id;
+        this.codi = codi;
+    }
+
 }
