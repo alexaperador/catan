@@ -30,7 +30,7 @@ public class CartaDesenvolupament {
     private Integer rondaCompra;
 
     @ManyToOne
-    @JoinColumn(name = "jugador_id", nullable = false)
+    @JoinColumn(name = "jugador_id", nullable = true)
     private Jugador jugador;
 
     @ManyToOne(optional = false)

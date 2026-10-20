@@ -6,15 +6,12 @@ import java.util.List;
 import catan.enums.TipusTerreny;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -23,9 +20,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "Hexagon")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(length = 30)
-public abstract class Hexagon {
+public class Hexagon {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

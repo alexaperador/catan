@@ -29,7 +29,7 @@ public class Jugador {
 
     @NotBlank(message = "El nom és obligatori")
     @Size(max = 50, message = "El nom no pot superar els {max} caràcters")
-    @Column(name = "nom", nullable = false, unique = true, length = 50)
+    @Column(name = "nom", nullable = false, length = 50)
     private String nom;
 
     @Enumerated(EnumType.STRING)

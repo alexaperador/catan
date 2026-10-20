@@ -1,49 +1,42 @@
 package catan;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "Aresta")
-@Inheritance(strategy = InheritanceType.JOINED)
-
-
-public class Aresta extends Carretera{
+public class Aresta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Aresta")
-
     int id;
-    int codi;
     
+    int codi;
+
     public int getId() {
         return id;
     }
+
     public void setId(int id) {
         this.id = id;
     }
+
     public int getCodi() {
         return codi;
     }
+
     public void setCodi(int codi) {
         this.codi = codi;
     }
 
-
-
-    protected Aresta(){
+    protected Aresta() {
 
     }
 
-    public Aresta (int id, int codi){
-        this.id = id;
+    public Aresta(int codi) {
         this.codi = codi;
     }
 
