@@ -56,4 +56,13 @@ public class Hexagon {
     @OneToMany(mappedBy = "hexagon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HexagonVertex> hexagonVertexs = new ArrayList<>();
 
+    public Hexagon(Integer codi, @NotNull(message = "El tipus de terreny és obligatori") TipusTerreny terreny,
+            @Min(2) @Max(12) Integer numero, int q, int r) {
+        this.codi = codi;
+        this.terreny = terreny;
+        this.numero = numero;
+        this.q = q;
+        this.r = r;
+    }
+
 }
