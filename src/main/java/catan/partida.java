@@ -76,4 +76,9 @@ public abstract class Partida {
     @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartaDesenvolupament> pila = new ArrayList<>();
 
+    public Partida() {
+    }
+
+    
+
 }
