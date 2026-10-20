@@ -28,5 +28,4 @@ public class Carretera extends Construccio {
         super(propietari);
         this.aresta = aresta;
     }
-
 }
