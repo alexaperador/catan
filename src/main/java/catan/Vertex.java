@@ -6,11 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-<<<<<<< HEAD
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-=======
->>>>>>> dev/badre
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 
@@ -18,7 +15,6 @@ import jakarta.validation.constraints.Min;
 @Entity
 @Table(name = "Vertex")
 public class Vertex {
-<<<<<<< HEAD
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -61,22 +57,3 @@ public class Vertex {
     }
 
 }
-=======
-    public int getId() {
-        return id;
-    }
-    public int getCodi() {
-        return codi;
-    }
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
-    @Column(name = "codi", nullable = false)
-    private int codi;
-
-    protected Vertex() {}
-    public Vertex(int codi) { this.codi = codi; }
-
-}
->>>>>>> dev/badre

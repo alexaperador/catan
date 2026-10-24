@@ -14,22 +14,11 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "Carretera")
-<<<<<<< HEAD
 public class Carretera extends Construccio{
 
    @OneToOne(optional = false, fetch = FetchType.LAZY)
    @JoinColumn(name = "aresta_id", nullable = false, unique = true)
    private Aresta aresta;
-=======
-@Inheritance(strategy = InheritanceType.JOINED)
-
-public class Carretera extends Construccio {
-
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "aresta_id", nullable = false, unique = true)
-
-    Aresta aresta;
->>>>>>> dev/badre
 
     protected Carretera() {
 
@@ -39,12 +28,9 @@ public class Carretera extends Construccio {
         super(propietari);
         this.aresta = aresta;
     }
-<<<<<<< HEAD
     
     public Aresta getAresta() {
         return aresta;
     }
 
-=======
->>>>>>> dev/badre
 }

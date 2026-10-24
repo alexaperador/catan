@@ -15,7 +15,6 @@ import jakarta.validation.constraints.Min;
 @Entity
 @Table(name = "Aresta")
 public class Aresta {
-<<<<<<< HEAD
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,42 +61,8 @@ public class Aresta {
     }
 
     public void setCodi(int codi) {
-=======
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
-    @Column(name = "codi", nullable = false)
-    private int codi;
-
-    public int getId() {
-        return id;
-    }
-    public int getCodi() {
-        return codi;
-    }
-    public Vertex getVertexA() {
-        return vertexA;
-    }
-    public Vertex getVertexB() {
-        return vertexB;
-    }
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "vertex_a_id", nullable = false)
-    private Vertex vertexA;
-
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "vertex_b_id", nullable = false)
-    private Vertex vertexB;
-
-    protected Aresta() {}
-    public Aresta(int codi, Vertex vertexA, Vertex vertexB) {
->>>>>>> dev/badre
         this.codi = codi;
-        this.vertexA = vertexA;
-        this.vertexB = vertexB;
     }
-<<<<<<< HEAD
 
     public Partida getPartida() {
         return partida;
@@ -118,6 +83,4 @@ public class Aresta {
         this.codi = codi;
     }
 
-=======
->>>>>>> dev/badre
 }
