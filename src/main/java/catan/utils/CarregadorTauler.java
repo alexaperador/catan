@@ -56,9 +56,6 @@ public class CarregadorTauler {
             int tipusTerrenyIndex = (int) (Math.random() * 6 + 1);
 
             TipusTerreny terreny = TipusTerreny.valueOf(camps[tipusTerrenyIndex]);
-
-            Hexagon hexagon = new Hexagon(codi, q, r);
-            hexagons.put(codi, hexagon);
         }
     }
 
