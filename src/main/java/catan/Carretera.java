@@ -3,11 +3,6 @@ package catan;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-<<<<<<< HEAD
-=======
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
->>>>>>> dev/badre
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
