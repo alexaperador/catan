@@ -1,7 +1,7 @@
 package catan;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -10,16 +10,25 @@ import jakarta.persistence.Table;
 @Table(name = "Assentament")
 public abstract class Assentament extends Construccio {
 
-    @Column(name = "Vertex")
-    @OneToOne(optional = false)
-    @JoinColumn(name = "vertex_id", unique = true)
-    Vertex vertex;
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "vertex_id", unique = true, nullable = false)
+    private Vertex vertex;
 
     protected Assentament() {
 
     }
 
-    public Assentament(Vertex vertex) {
+    public Assentament(Jugador propietari, Vertex vertex) {
+        super(propietari);
         this.vertex = vertex;
     }
+
+    public Vertex getVertex() {
+        return vertex;
+    }
+
+    public void setVertex(Vertex vertex) {
+        this.vertex = vertex;
+    }
+
 }

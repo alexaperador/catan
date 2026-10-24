@@ -34,4 +34,40 @@ public class HexagonVertex {
     @Column(name = "posicio", nullable = false)
     private int posicio;
 
+    protected HexagonVertex() {
+    }
+
+    public HexagonVertex(Hexagon hexagon, Vertex vertex, int posicio) {
+        this.hexagon = hexagon;
+        this.vertex = vertex;
+        this.posicio = posicio;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Hexagon getHexagon() {
+        return hexagon;
+    }
+
+    public void setHexagon(Hexagon hexagon) {
+        this.hexagon = hexagon;
+    }
+
+    public Vertex getVertex() {
+        return vertex;
+    }
+
+    public void setVertex(Vertex vertex) {
+        this.vertex = vertex;
+    }
+
+    public int getPosicio() {
+        return posicio;
+    }
+
+    public void setPosicio(int posicio) {
+        this.posicio = posicio;
+    }
 }

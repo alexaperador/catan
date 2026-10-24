@@ -14,7 +14,7 @@ import catan.Main;
 import catan.enums.TipusTerreny;
 
 public class CarregadorTauler {
-    private final static String CARPETA_CSV = "/resources/csv/";
+    private final static String CARPETA_CSV = "csv/";
 
     public static List<String[]> llegirCsv(String nomFitxer) {
         InputStream is = Main.class.getClassLoader().getResourceAsStream(CARPETA_CSV + nomFitxer);
@@ -53,9 +53,9 @@ public class CarregadorTauler {
             String q = camps[1];
             String r = camps[2];
 
-            int tipusTerrenyIndex = Math.random() * 6 + 1;
+            int tipusTerrenyIndex = (int) (Math.random() * 6 + 1);
 
-            TipusTerreny terreny = TipusTerreny.valueOf(camps[tipusTerrenyIndexº]);
+            TipusTerreny terreny = TipusTerreny.valueOf(camps[tipusTerrenyIndex]);
 
             Hexagon hexagon = new Hexagon(codi, q, r);
             hexagons.put(codi, hexagon);

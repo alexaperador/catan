@@ -14,12 +14,11 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "Construccio")
 @Inheritance(strategy = InheritanceType.JOINED)
-
 public abstract class Construccio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    int id;
+    private Integer id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "propietari_id", nullable = false)
@@ -33,11 +32,15 @@ public abstract class Construccio {
         this.propietari = propietari;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public Jugador getPropietari() {
+        return propietari;
+    }
+
+    public void setPropietari(Jugador propietari) {
+        this.propietari = propietari;
     }
 }

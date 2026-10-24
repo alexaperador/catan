@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import catan.enums.EstatPartida;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -18,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -42,29 +45,34 @@ public class Partida {
     private LocalDate dataInici;
 
     @Min(value = 1)
+    @ColumnDefault("1")
     @Column(name = "ronda")
     private Integer ronda;
 
-    @Column(name = "ultima_tirada")
+    @Min(value = 2)
+    @Max(value = 12)
+    @Column(name = "ultima_tirada", nullable = true)
     private Integer ultimaTirada;
 
-    @Column(name = "punts_per_guanyar")
+    @Min(value = 1)
+    @ColumnDefault("10")
+    @Column(name = "punts_per_guanyar", nullable = false)
     private Integer puntsPerGuanyar;
 
-    @Column(name = "daus_tirats")
-    private Boolean dausTirats;
+    @Column(name = "daus_tirats", nullable = false)
+    private boolean dausTirats;
 
-    @Column(name = "lladre_pendent")
-    private Boolean lladrePendent;
+    @Column(name = "lladre_pendent", nullable = false)
+    private boolean lladrePendent;
 
     @OneToMany(mappedBy = "partida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Jugador> jugadors = new ArrayList<>();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_actiu_id", nullable = true)
     private Jugador actiu;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guanyador_id", nullable = true)
     private Jugador guanyador;
 
@@ -142,7 +150,7 @@ public class Partida {
         this.puntsPerGuanyar = puntsPerGuanyar;
     }
 
-    public Boolean getDausTirats() {
+    public boolean getDausTirats() {
         return dausTirats;
     }
 
@@ -150,7 +158,7 @@ public class Partida {
         this.dausTirats = dausTirats;
     }
 
-    public Boolean getLladrePendent() {
+    public boolean getLladrePendent() {
         return lladrePendent;
     }
 
@@ -196,5 +204,29 @@ public class Partida {
 
     public void setLladre(Hexagon lladre) {
         this.lladre = lladre;
+    }
+
+    public List<Hexagon> getTauler() {
+        return tauler;
+    }
+
+    public void setTauler(List<Hexagon> tauler) {
+        this.tauler = tauler;
+    }
+
+    public List<Vertex> getVertexs() {
+        return vertexs;
+    }
+
+    public void setVertexs(List<Vertex> vertexs) {
+        this.vertexs = vertexs;
+    }
+
+    public List<Aresta> getArestes() {
+        return arestes;
+    }
+
+    public void setArestes(List<Aresta> arestes) {
+        this.arestes = arestes;
     }
 }

@@ -3,6 +3,8 @@ package catan;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.Check;
+
 import catan.enums.TipusTerreny;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -30,7 +32,8 @@ public class Hexagon {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "codi")
+    @Min(1)
+    @Column(name = "codi", nullable = false)
     private Integer codi;
 
     @NotNull(message = "El tipus de terreny és obligatori")
@@ -40,13 +43,14 @@ public class Hexagon {
 
     @Min(2)
     @Max(12)
+    @Check(constraints = "numero IS NULL OR numero <> 7")
     @Column(name = "numero", nullable = true)
     private Integer numero;
 
-    @Column(name = "q")
+    @Column(name = "q", nullable = false)
     private int q;
 
-    @Column(name = "r")
+    @Column(name = "r", nullable = false)
     private int r;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -56,13 +60,76 @@ public class Hexagon {
     @OneToMany(mappedBy = "hexagon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HexagonVertex> hexagonVertexs = new ArrayList<>();
 
-    public Hexagon(Integer codi, @NotNull(message = "El tipus de terreny és obligatori") TipusTerreny terreny,
-            @Min(2) @Max(12) Integer numero, int q, int r) {
+    public Hexagon(Partida partida, int codi, TipusTerreny terreny, Integer numero, int q, int r) {
+        this.partida = partida;
         this.codi = codi;
         this.terreny = terreny;
         this.numero = numero;
         this.q = q;
         this.r = r;
+    }
+
+    protected Hexagon() {
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Integer getCodi() {
+        return codi;
+    }
+
+    public void setCodi(Integer codi) {
+        this.codi = codi;
+    }
+
+    public TipusTerreny getTerreny() {
+        return terreny;
+    }
+
+    public void setTerreny(TipusTerreny terreny) {
+        this.terreny = terreny;
+    }
+
+    public Integer getNumero() {
+        return numero;
+    }
+
+    public void setNumero(Integer numero) {
+        this.numero = numero;
+    }
+
+    public int getQ() {
+        return q;
+    }
+
+    public void setQ(int q) {
+        this.q = q;
+    }
+
+    public int getR() {
+        return r;
+    }
+
+    public void setR(int r) {
+        this.r = r;
+    }
+
+    public Partida getPartida() {
+        return partida;
+    }
+
+    public void setPartida(Partida partida) {
+        this.partida = partida;
+    }
+
+    public List<HexagonVertex> getHexagonVertexs() {
+        return hexagonVertexs;
+    }
+
+    public void setHexagonVertexs(List<HexagonVertex> hexagonVertexs) {
+        this.hexagonVertexs = hexagonVertexs;
     }
 
 }
