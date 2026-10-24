@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 
 @Entity
@@ -24,7 +25,8 @@ public class Vertex {
     private Partida partida;
 
     @Min(1)
-    @Column(name = "codi")
+    @NotNull(message = "El codi és obligatori")
+    @Column(name = "codi", nullable = false)
     private int codi;
 
     protected Vertex() {

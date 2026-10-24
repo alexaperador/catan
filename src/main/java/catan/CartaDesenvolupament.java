@@ -34,19 +34,19 @@ public class CartaDesenvolupament {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_id", nullable = true)
-    private Jugador jugador;
+    private Jugador ma;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
-    private Partida partida;
+    private Partida pila;
 
     protected CartaDesenvolupament() {
     }
 
-    public CartaDesenvolupament(TipusCarta tipusCarta, Partida partida) {
+    public CartaDesenvolupament(TipusCarta tipusCarta, Partida pila) {
         this.tipusCarta = tipusCarta;
         this.usada = false;
-        this.partida = partida;
+        this.pila = pila;
     }
 
     public Integer getId() {
@@ -77,19 +77,19 @@ public class CartaDesenvolupament {
         this.rondaCompra = rondaCompra;
     }
 
-    public Jugador getJugador() {
-        return jugador;
+    public Jugador getMa() {
+        return ma;
     }
 
-    public void setJugador(Jugador jugador) {
-        this.jugador = jugador;
+    public void setMa(Jugador ma) {
+        this.ma = ma;
     }
 
-    public Partida getPartida() {
-        return partida;
+    public Partida getPila() {
+        return pila;
     }
 
-    public void setPartida(Partida partida) {
-        this.partida = partida;
+    public void setPila(Partida pila) {
+        this.pila = pila;
     }
 }
