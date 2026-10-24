@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 
-
 @Entity
 @Table(name = "Aresta")
 public class Aresta {
@@ -76,11 +75,11 @@ public class Aresta {
 
     }
 
-    public Aresta(Partida partida, Vertex vertexA, Vertex vertexB, int codi) {
+    public Aresta(Partida partida, int codi, Vertex vertexA, Vertex vertexB) {
         this.partida = partida;
+        this.codi = codi;
         this.vertexA = vertexA;
         this.vertexB = vertexB;
-        this.codi = codi;
     }
 
 }

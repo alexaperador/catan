@@ -92,9 +92,6 @@ public class Partida {
     @JoinColumn(name = "lladre_id", nullable = true)
     private Hexagon lladre;
 
-    protected Partida() {
-    }
-
     public Partida(EstatPartida estat, LocalDate dataInici, Integer ronda, Integer ultimaTirada,
             Integer puntsPerGuanyar, Boolean dausTirats, Boolean lladrePendent) {
         this.estat = estat;
@@ -104,6 +101,15 @@ public class Partida {
         this.puntsPerGuanyar = puntsPerGuanyar;
         this.dausTirats = dausTirats;
         this.lladrePendent = lladrePendent;
+    }
+
+    public Partida() {
+        this.estat = EstatPartida.PREPARACIO;
+        this.dataInici = LocalDate.now();
+        this.ronda = 1;
+        this.puntsPerGuanyar = 10;
+        this.dausTirats = false;
+        this.lladrePendent = false;
     }
 
     public Integer getId() {

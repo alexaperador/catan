@@ -43,10 +43,10 @@ public class CartaDesenvolupament {
     protected CartaDesenvolupament() {
     }
 
-    public CartaDesenvolupament(TipusCarta tipusCarta, Partida pila) {
+    public CartaDesenvolupament(Partida pila, TipusCarta tipusCarta) {
+        this.pila = pila;
         this.tipusCarta = tipusCarta;
         this.usada = false;
-        this.pila = pila;
     }
 
     public Integer getId() {

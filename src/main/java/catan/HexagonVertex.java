@@ -8,12 +8,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 @Entity
 @Table(name = "HexagonVertex")
+@NamedQuery (name = "HexagonVertex.assentamentsPerPartida", query = "SELECT hv.hexagon.id, a "
+        + "FROM HexagonVertex hv, Assentament a "
+        + "WHERE a.vertex = hv.vertex AND hv.hexagon.partida.id = :idPartida "
+        + "ORDER BY hv.hexagon.codi, hv.posicio")
 public class HexagonVertex {
 
     @Id

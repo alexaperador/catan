@@ -1,4 +1,4 @@
-package catan;
+package catan.dao;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -7,6 +7,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
+import catan.SessionManager;
 
 public class GenericDao<T, ID extends Serializable> implements IGenericDao<T, ID> {
 
@@ -17,7 +18,8 @@ public class GenericDao<T, ID extends Serializable> implements IGenericDao<T, ID
 	}
 
 	/*
-	 * Ara si, desenvolupem el codi de manera genèrica ja que totes les classes necessiten aquests mètodes
+	 * Ara si, desenvolupem el codi de manera genèrica ja que totes les classes
+	 * necessiten aquests mètodes
 	 */
 	@Override
 	public void saveOrUpdate(T entity) {

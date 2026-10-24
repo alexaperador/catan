@@ -1,4 +1,4 @@
-package catan;
+package catan.dao;
 
 import java.io.Serializable;
 import java.util.List;

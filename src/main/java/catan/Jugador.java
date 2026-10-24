@@ -59,7 +59,14 @@ public class Jugador {
     @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartaDesenvolupament> cartesDesenvolupament = new ArrayList<>();
 
-    public Jugador() {
+    protected Jugador() {
+    }
+
+    public Jugador(String nom, ColorJugador color, int ordreTorn, Partida partida) {
+        this.nom = nom;
+        this.color = color;
+        this.ordreTorn = ordreTorn;
+        this.partida = partida;
     }
 
     public Integer getId() {
