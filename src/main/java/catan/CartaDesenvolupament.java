@@ -5,19 +5,21 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 
 @Entity
 @Table(name = "cartes_desenvolupament")
 public class CartaDesenvolupament {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipus_carta", nullable = false, length = 20)
@@ -26,27 +28,29 @@ public class CartaDesenvolupament {
     @Column(name = "usada", nullable = false)
     private boolean usada;
 
+    @Min(1)
     @Column(name = "ronda_compra", nullable = true)
     private Integer rondaCompra;
 
-    @ManyToOne
-    @JoinColumn(name = "jugador_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "jugador_id", nullable = true)
     private Jugador ma;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida pila;
 
-    public CartaDesenvolupament() {
-
+    protected CartaDesenvolupament() {
     }
 
-    public CartaDesenvolupament(Jugador ma, Partida pila, Integer rondaCompra, TipusCarta tipusCarta, boolean usada) {
-        this.ma = ma;
-        this.pila = pila;
-        this.rondaCompra = rondaCompra;
+    public CartaDesenvolupament(TipusCarta tipusCarta, Partida pila) {
         this.tipusCarta = tipusCarta;
-        this.usada = usada;
+        this.usada = false;
+        this.pila = pila;
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public TipusCarta getTipusCarta() {
@@ -88,11 +92,4 @@ public class CartaDesenvolupament {
     public void setPila(Partida pila) {
         this.pila = pila;
     }
-
-    public int getId() {
-        return id;
-    }
-
-    
-
 }

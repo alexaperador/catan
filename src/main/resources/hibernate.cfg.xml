@@ -5,34 +5,32 @@
 <hibernate-configuration>
 	<session-factory>
 
-		<!-- Database Connection Settings -->
 		<property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-		<!-- Això ho heu de canviar per les vostres dades -->
 		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/catan?createDatabaseIfNotExist=true</property>
 		<property name="hibernate.connection.username">root</property>
 		<property name="hibernate.connection.password">super3</property>
 
-		<!-- Aquesta és important. Valors: none | validate | update | create | create-drop
-		     Mentre fem proves, "create" esborra i torna a crear les taules a cada execució:
-		     així el programa es pot executar tantes vegades com vulguem sense errors de clau duplicada.
-		     Quan el model sigui estable (i a la pràctica), "update". -->
 		<property name="hibernate.hbm2ddl.auto">create</property>
+		<property name="hibernate.current_session_context_class">thread</property>
 
-		<!-- Això ens permet xafardejar l'SQL que genera Hibernate. Opcional -->
 		<property name="hibernate.show_sql">true</property>
-		<!-- Això formata les sentències SQL -->
 		<property name="hibernate.format_sql">true</property>
-		<!-- Això mostra les sentències SQL en un altre color a la consola -->
 		<property name="hibernate.highlight_sql">true</property>
-		<!-- Això afegeix comentaris a les sentències
-		<property name="hibernate.use_sql_comments">true</property>
-		-->
 
-
-		<!-- AQUÍ POSEU LES CLASSES QUE REPRESENTEN TAULES QUE FEU SERVIR -->
-		<!-- Els enums (Pegi, Genere) NO van aquí: no són entitats -->
-		<mapping class="Partida"/>
-
+		<mapping class="catan.Partida"/>
+		<mapping class="catan.Jugador"/>
+		<mapping class="catan.Hexagon"/>
+		<mapping class="catan.Vertex"/>
+		<mapping class="catan.Aresta"/>
+		<mapping class="catan.HexagonVertex"/>
+		<mapping class="catan.RecursJugador"/>
+		<mapping class="catan.CartaDesenvolupament"/>
+		<mapping class="catan.Construccio"/>
+		<mapping class="catan.Assentament"/>
+		<mapping class="catan.Poblat"/>
+		<mapping class="catan.Ciutat"/>
+		<mapping class="catan.Carretera"/>
+		
 	</session-factory>
 </hibernate-configuration>
 

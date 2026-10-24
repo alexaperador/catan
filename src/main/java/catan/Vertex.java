@@ -6,42 +6,52 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+
 
 @Entity
 @Table(name = "Vertex")
-@Inheritance(strategy = InheritanceType.JOINED)
-
-
-
-public class Vertex extends Assentament{
-    
-
+public class Vertex {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Vertex")
-    int id;
+    private Integer id;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "partida_id", nullable = false)
+    private Partida partida;
+
+    @Min(1)
     @NotNull(message = "El codi és obligatori")
-    int codi;
+    @Column(name = "codi", nullable = false)
+    private int codi;
 
-    @OneToMany(mappedBy = "hexagon", cascade = CascadeType.ALL)
-    private List<HexagonVertex> HexagonVertexs = new ArrayList<>();
-
-    protected Vertex(){
+    protected Vertex() {
 
     }
 
-    public Vertex (int codi, List<HexagonVertex> HexagonVertexs){
+    public Vertex(Partida partida, int codi) {
+        this.partida = partida;
         this.codi = codi;
-        this.HexagonVertexs = HexagonVertexs;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Partida getPartida() {
+        return partida;
+    }
+
+    public void setPartida(Partida partida) {
+        this.partida = partida;
     }
 
     public int getCodi() {
@@ -50,18 +60,6 @@ public class Vertex extends Assentament{
 
     public void setCodi(int codi) {
         this.codi = codi;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public List<HexagonVertex> getHexagonVertexs() {
-        return HexagonVertexs;
-    }
-
-    public void setHexagonVertexs(List<HexagonVertex> HexagonVertexs) {
-        this.HexagonVertexs = HexagonVertexs;
     }
 
 }

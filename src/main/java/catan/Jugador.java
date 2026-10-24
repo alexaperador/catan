@@ -17,7 +17,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -25,24 +28,28 @@ import jakarta.validation.constraints.Size;
 public class Jugador {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @NotBlank(message = "El nom és obligatori")
     @Size(max = 50, message = "El nom no pot superar els {max} caràcters")
-    @Column(name = "nom", nullable = false, unique = true, length = 50)
+    @Column(name = "nom", nullable = false, length = 50)
     private String nom;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "El color és obligatori")
     @Column(name = "color", nullable = false, length = 20)
     private ColorJugador color;
 
+    @Min(value = 1, message = "L'ordre del torn ha de ser com a mínim {value}")
+    @Max(value = 4, message = "L'ordre del torn ha de ser com a màxim {value}")
     @Column(name = "ordre_torn", nullable = false)
     private int ordreTorn;
 
+    @Min(value = 0, message = "El nombre de cavallers jugats ha de ser com a mínim {value}")
     @Column(name = "cavallers_jugats", nullable = false)
     private int cavallersJugats;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;
 
@@ -50,20 +57,13 @@ public class Jugador {
     private List<RecursJugador> recursos = new ArrayList<>();
 
     @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CartaDesenvolupament> ma = new ArrayList<>();
+    private List<CartaDesenvolupament> cartesDesenvolupament = new ArrayList<>();
 
     public Jugador() {
     }
 
-    public Jugador(int cavallersJugats, ColorJugador color, String nom, int ordreTorn, Partida partida, 
-            List<RecursJugador>recursos, List<CartaDesenvolupament> ma) {
-        this.cavallersJugats = cavallersJugats;
-        this.color = color;
-        this.nom = nom;
-        this.ordreTorn = ordreTorn;
-        this.partida = partida;
-        this.recursos = recursos;
-        this.ma = ma;
+    public Integer getId() {
+        return id;
     }
 
     public String getNom() {
@@ -114,17 +114,12 @@ public class Jugador {
         this.recursos = recursos;
     }
 
-    public List<CartaDesenvolupament> getma() {
-        return ma;
+    public List<CartaDesenvolupament> getCartesDesenvolupament() {
+        return cartesDesenvolupament;
     }
 
-    public void setCartesDesenvolupament(List<CartaDesenvolupament> ma) {
-        this.ma = ma;
+    public void setCartesDesenvolupament(List<CartaDesenvolupament> cartesDesenvolupament) {
+        this.cartesDesenvolupament = cartesDesenvolupament;
     }
-
-    public int getId() {
-        return id;
-    }
-
 
 }

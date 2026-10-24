@@ -1,33 +1,34 @@
 package catan;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-
-
 
 @Entity
 @Table(name = "Assentament")
-@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class Assentament extends Construccio {
 
-public abstract class Assentament extends Construccio{
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "vertex_id", unique = true, nullable = false)
+    private Vertex vertex;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Vertex")
-    Vertex vertex;
-
-    protected Assentament(){
+    protected Assentament() {
 
     }
 
-    public Assentament(Vertex vertex) {
+    public Assentament(Jugador propietari, Vertex vertex) {
+        super(propietari);
         this.vertex = vertex;
-    }   
+    }
+
+    public Vertex getVertex() {
+        return vertex;
+    }
+
+    public void setVertex(Vertex vertex) {
+        this.vertex = vertex;
+    }
+
 }
