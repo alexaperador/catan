@@ -6,6 +6,6 @@ public interface IJugadorDao {
     void mostrarRecursos(int idJugador);
 
     void comerciarBanca(int idJugador, TipusRecurs dona, TipusRecurs rep);
-
-    void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima);
+    void comprarCarta(int idJugador);
+    void jugarCarta(int idJugador, int idCarta, TipusRecurs recurs);
 }
