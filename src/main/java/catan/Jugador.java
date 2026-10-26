@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,6 +26,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "jugadors")
+@NamedQuery(name = "Jugador.perPartida", query = "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn")
 public class Jugador {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
