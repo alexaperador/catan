@@ -247,4 +247,40 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             throw e;
         }
     }
+
+    @Override
+    public void construirCarretera(int idJugador, int idAresta) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'construirCarretera'");
+    }
+
+    @Override
+    public void construirPoblat(int idJugador, int idVertex) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'construirPoblat'");
+    }
+
+    @Override
+    public void millorarACiutat(int idJugador, int idVertex) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'millorarACiutat'");
+    }
+
+    @Override
+    public int calcularPunts(int idJugador) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'calcularPunts'");
+    }
+
+    @Override
+    public void passarTorn(int idJugador) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'passarTorn'");
+    }
+
+    @Override
+    public void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'moureLladre'");
+    }
 }

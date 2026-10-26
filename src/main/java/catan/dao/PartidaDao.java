@@ -15,7 +15,6 @@ import catan.Hexagon;
 import catan.Jugador;
 import catan.Partida;
 import catan.RecursJugador;
-import catan.SessionManager;
 import catan.Vertex;
 import catan.enums.ColorJugador;
 import catan.enums.TipusCarta;
@@ -211,7 +210,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         }
     }
 
-    public Jugador ExercitMesGran(int idPartida) {
+    public Jugador exercitMesGran(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -248,7 +247,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         }
     }
 
-    public List<Vertex> VertexsDisponibles(int idJugador) {
+    public List<Vertex> vertexsDisponibles(int idJugador) {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -285,5 +284,17 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             handleException(session, e);
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public void tirarDaus(int idPartida) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'tirarDaus'");
+    }
+
+    @Override
+    public void comprovarVictoria(int idPartida) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'comprovarVictoria'");
     }
 }
