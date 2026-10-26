@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import catan.Assentament;
 import catan.CartaDesenvolupament;
@@ -16,7 +15,7 @@ import catan.Hexagon;
 import catan.Jugador;
 import catan.Partida;
 import catan.RecursJugador;
-import catan.SessionManager;
+import catan.Vertex;
 import catan.enums.ColorJugador;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
@@ -24,14 +23,14 @@ import catan.utils.CarregadorTauler;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
 
+    @Override
     public int iniciarPartida(List<String> nomsJugadors) {
         if (nomsJugadors == null || nomsJugadors.size() < 2 || nomsJugadors.size() > 4) {
-            throw new IllegalArgumentException("Hi ha d'haver entre 2 i 4 jugadors");
+            throw new IllegalArgumentException("El nombre de jugadors ha de ser entre 2 i 4.");
         }
-
-        Transaction tx = null;
-        try (Session session = SessionManager.getSessionFactory().openSession()) {
-            tx = session.beginTransaction();
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
 
             Partida partida = new Partida();
             session.persist(partida);
@@ -47,7 +46,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 session.persist(jugador);
                 partida.getJugadors().add(jugador);
                 if (i == 0) {
-                    partida.setActiu(jugador); // comença l'ordreTorn 1
+                    partida.setActiu(jugador);
                 }
             }
 
@@ -58,13 +57,12 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             Hexagon desert = CarregadorTauler.carregarTauler(session, partida);
             partida.setLladre(desert);
 
-            tx.commit();
+            session.getTransaction().commit();
+
             return partida.getId();
         } catch (RuntimeException e) {
-            if (tx != null && tx.isActive()) {
-                tx.rollback();
-            }
-            throw e;
+            handleException(session, e);
+            return -1;
         }
     }
 
@@ -75,7 +73,9 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
     }
 
     public void mostrarTauler(int idPartida) {
-        try (Session session = SessionManager.getSessionFactory().openSession()) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
             Partida partida = session.get(Partida.class, idPartida);
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
@@ -119,11 +119,40 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                             + " al vèrtex " + assentament.getVertex().getCodi());
                 }
             }
+            session.getTransaction().commit();
+        } catch (RuntimeException e) {
+            handleException(session, e);
+        }
+    }
+
+    public void mostrarRecursos(int idJugador) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Jugador jugador = session.get(Jugador.class, idJugador);
+            if (jugador == null) {
+                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
+            }
+
+            List<RecursJugador> recursos = session
+                    .createNamedQuery("RecursJugador.perJugador", RecursJugador.class)
+                    .setParameter("idJugador", idJugador)
+                    .getResultList();
+
+            System.out.println("Recursos de " + jugador.getNom() + " (" + jugador.getColor() + ")");
+            for (RecursJugador r : recursos) {
+                System.out.println("  " + r.getTipusRecurs() + ": " + r.getQuantitat());
+            }
+            session.getTransaction().commit();
+        } catch (RuntimeException e) {
+            handleException(session, e);
         }
     }
 
     public void mostrarPartida(int idPartida) {
-        try (Session session = SessionManager.getSessionFactory().openSession()) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
             Partida partida = session.get(Partida.class, idPartida);
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
@@ -154,7 +183,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         .setParameter("id", id).uniqueResult();
                 long cartesPunt = session.createQuery(
                         "SELECT COUNT(c) FROM CartaDesenvolupament c "
-                                + "WHERE c.jugador.id = :id AND c.tipusCarta = :tipus",
+                                + "WHERE c.ma.id = :id AND c.tipusCarta = :tipus",
                         Long.class)
                         .setParameter("id", id)
                         .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
@@ -173,8 +202,99 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         + " | Ciutats: " + ciutats
                         + " | Carreteres: " + carreteres);
                 System.out.println("Total de recursos: " + totalRecursos.intValue());
+
+                session.getTransaction().commit();
             }
+        } catch (RuntimeException e) {
+            handleException(session, e);
         }
     }
 
+    public Jugador exercitMesGran(int idPartida) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Partida partida = session.get(Partida.class, idPartida);
+            if (partida == null) {
+                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
+            }
+
+            List<Jugador> top = session
+                    .createQuery("FROM Jugador j WHERE j.partida.id = :idPartida "
+                            + "ORDER BY j.cavallersJugats DESC", Jugador.class)
+                    .setParameter("idPartida", idPartida)
+                    .setMaxResults(2)
+                    .getResultList();
+
+            if (top.isEmpty()) {
+                return null;
+            }
+            Jugador primer = top.get(0);
+
+            if (primer.getCavallersJugats() < 3) {
+                return null;
+            }
+
+            if (top.size() > 1 && top.get(1).getCavallersJugats() == primer.getCavallersJugats()) {
+                return null;
+            }
+            session.getTransaction().commit();
+            return primer;
+
+        } catch (RuntimeException e) {
+            handleException(session, e);
+            return null;
+        }
+    }
+
+    public List<Vertex> vertexsDisponibles(int idJugador) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Jugador jugador = session.get(Jugador.class, idJugador);
+            if (jugador == null) {
+                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
+            }
+
+            Partida partida = jugador.getPartida();
+            boolean preparacio = partida.getEstat().equals("PREPARACIO");
+
+            String hql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
+                    + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "
+                    + "AND NOT EXISTS (SELECT 1 FROM Aresta ar, Assentament a2 "
+                    + "    WHERE (ar.vertexA = v AND a2.vertex = ar.vertexB) "
+                    + "    OR (ar.vertexB = v AND a2.vertex = ar.vertexA)) ";
+
+            if (!preparacio) {
+                hql += "AND EXISTS (SELECT 1 FROM Carretera c "
+                        + "    WHERE c.propietari.id = :idJugador "
+                        + "      AND (c.aresta.vertexA = v OR c.aresta.vertexB = v)) ";
+            }
+
+            hql += "ORDER BY v.codi";
+
+            var query = session.createQuery(hql, Vertex.class)
+                    .setParameter("idPartida", partida.getId());
+            if (!preparacio) {
+                query.setParameter("idJugador", idJugador);
+            }
+            session.getTransaction().commit();
+            return query.getResultList();
+        } catch (RuntimeException e) {
+            handleException(session, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public void tirarDaus(int idPartida) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'tirarDaus'");
+    }
+
+    @Override
+    public void comprovarVictoria(int idPartida) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'comprovarVictoria'");
+    }
 }

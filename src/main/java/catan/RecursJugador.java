@@ -19,6 +19,7 @@ import jakarta.validation.constraints.Min;
 @Entity
 @Table(name = "recursos_jugador", uniqueConstraints = @UniqueConstraint(columnNames = { "jugador_id", "tipus" }))
 @NamedQuery(name = "RecursJugador.perJugador", query = "FROM RecursJugador r WHERE r.jugador.id = :idJugador ORDER BY r.id")
+@NamedQuery(name = "RecursJugador.perJugadorITipus", query = "FROM RecursJugador r WHERE r.jugador.id = :idJugador AND r.tipusRecurs = :tipus")
 public class RecursJugador {
 
     @Id
