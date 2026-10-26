@@ -26,7 +26,8 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "jugadors")
-@NamedQuery(name = "Jugador.perPartida", query = "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn")
+@NamedQuery(name = "Jugador.perPartida",
+        query = "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn")
 public class Jugador {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
