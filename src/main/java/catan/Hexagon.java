@@ -47,7 +47,7 @@ public class Hexagon {
     @Max(12)
     @Check(constraints = "numero IS NULL OR numero <> 7")
     @Column(name = "numero", nullable = true)
-    private Integer numero;
+    private int numero;
 
     @Column(name = "q", nullable = false)
     private int q;

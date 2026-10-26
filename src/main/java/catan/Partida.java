@@ -52,7 +52,7 @@ public class Partida {
     @Min(value = 2)
     @Max(value = 12)
     @Column(name = "ultima_tirada", nullable = true)
-    private Integer ultimaTirada;
+    private int ultimaTirada;
 
     @Min(value = 1)
     @ColumnDefault("10")
