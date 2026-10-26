@@ -17,6 +17,7 @@ import catan.Jugador;
 import catan.Partida;
 import catan.RecursJugador;
 import catan.SessionManager;
+import catan.Vertex;
 import catan.enums.ColorJugador;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
@@ -177,4 +178,71 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         }
     }
 
+    public Jugador ExercitMesGran(int idPartida) {
+
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            Partida partida = session.get(Partida.class, idPartida);
+            if (partida == null) {
+                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
+            }
+
+            List<Jugador> top = session
+                    .createQuery("FROM Jugador j WHERE j.partida.id = :idPartida "
+                            + "ORDER BY j.cavallersJugats DESC", Jugador.class)
+                    .setParameter("idPartida", idPartida)
+                    .setMaxResults(2)
+                    .getResultList();
+
+
+            if (top.isEmpty()) {
+                return null;
+            }
+            Jugador primer = top.get(0);
+
+            if (primer.getCavallersJugats() < 3) {
+            return null;
+        }
+
+            if (top.size() > 1 && top.get(1).getCavallersJugats() == primer.getCavallersJugats()) {
+            return null;
+        }
+            return primer;
+
+        }
+    }
+
+
+    public List<Vertex> VertexsDisponibles(int idJugador){
+
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            Jugador jugador = session.get(Jugador.class, idJugador);
+            if(jugador == null){
+                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
+            }
+
+        Partida partida = jugador.getPartida();
+        boolean preparacio = partida.getEstat().equals("PREPARACIO");
+
+        String hql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
+                + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "
+                + "AND NOT EXISTS (SELECT 1 FROM Aresta ar, Assentament a2 "
+                + "    WHERE (ar.vertexA = v AND a2.vertex = ar.vertexB) "
+                + "    OR (ar.vertexB = v AND a2.vertex = ar.vertexA)) ";
+
+                if (!preparacio) {
+            hql += "AND EXISTS (SELECT 1 FROM Carretera c "
+                    + "    WHERE c.propietari.id = :idJugador "
+                    + "      AND (c.aresta.vertexA = v OR c.aresta.vertexB = v)) ";
+        }
+
+        hql += "ORDER BY v.codi";
+
+        var query = session.createQuery(hql, Vertex.class)
+                .setParameter("idPartida", partida.getId());
+        if (!preparacio) {
+            query.setParameter("idJugador", idJugador);
+        }   
+        return query.getResultList();
+        }
+    }
 }

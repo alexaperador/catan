@@ -36,7 +36,7 @@ public class Partida {
 
     @NotNull(message = "El estat és obligatori")
     @Enumerated(EnumType.STRING)
-    @Column(name = "estat", nullable = false, length = 10)
+    @Column(name = "estat", nullable = false, length = 15)
     private EstatPartida estat;
 
     @NotNull(message = "La data d'inici és obligatòria")

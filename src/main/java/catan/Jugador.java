@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -25,6 +26,8 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "jugadors")
+@NamedQuery(name = "Jugador.perPartida",
+        query = "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn")
 public class Jugador {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
