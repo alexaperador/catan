@@ -30,7 +30,7 @@ public class CartaDesenvolupament {
 
     @Min(1)
     @Column(name = "ronda_compra", nullable = true)
-    private int rondaCompra;
+    private Integer rondaCompra;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_id", nullable = true)
