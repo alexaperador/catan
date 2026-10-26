@@ -154,7 +154,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         .setParameter("id", id).uniqueResult();
                 long cartesPunt = session.createQuery(
                         "SELECT COUNT(c) FROM CartaDesenvolupament c "
-                                + "WHERE c.jugador.id = :id AND c.tipusCarta = :tipus",
+                                + "WHERE c.ma.id = :id AND c.tipusCarta = :tipus",
                         Long.class)
                         .setParameter("id", id)
                         .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
