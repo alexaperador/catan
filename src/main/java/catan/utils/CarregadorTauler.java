@@ -65,6 +65,7 @@ public class CarregadorTauler {
         List<Integer> numeros = numerosBarrejats();
 
         Hexagon desert = null;
+        int indexNumero = 0;
         for (int i = 0; i < files.size(); i++) {
             String[] camps = files.get(i);
             int codi = Integer.parseInt(camps[0]);
@@ -72,7 +73,7 @@ public class CarregadorTauler {
             int r = Integer.parseInt(camps[2]);
 
             TipusTerreny terreny = terrenys.get(i);
-            Integer numero = (terreny == TipusTerreny.DESERT) ? null : numeros.get(i);
+            Integer numero = (terreny == TipusTerreny.DESERT) ? null : numeros.get(indexNumero++);
 
             Hexagon hexagon = new Hexagon(partida, codi, terreny, numero, q, r);
             session.persist(hexagon);
