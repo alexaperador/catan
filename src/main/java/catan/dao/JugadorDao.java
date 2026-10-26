@@ -101,4 +101,10 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             throw e;
         }
     }
+
+    @Override
+    public void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'moureLladre'");
+    }
 }

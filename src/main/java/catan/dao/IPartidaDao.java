@@ -1,9 +1,13 @@
 package catan.dao;
 
+import java.util.List;
+
 public interface IPartidaDao {
-    int iniciarPartida(java.util.List<String> nomsJugadors);
+    int iniciarPartida(List<String> nomsJugadors);
 
     void mostrarTauler(int idPartida);
 
     void mostrarPartida(int idPartida);
+
+    void mostrarRecursos(int idJugador);
 }

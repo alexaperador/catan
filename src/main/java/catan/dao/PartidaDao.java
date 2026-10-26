@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import catan.Assentament;
 import catan.CartaDesenvolupament;
@@ -16,7 +15,6 @@ import catan.Hexagon;
 import catan.Jugador;
 import catan.Partida;
 import catan.RecursJugador;
-import catan.SessionManager;
 import catan.enums.ColorJugador;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
@@ -24,14 +22,14 @@ import catan.utils.CarregadorTauler;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
 
+    @Override
     public int iniciarPartida(List<String> nomsJugadors) {
         if (nomsJugadors == null || nomsJugadors.size() < 2 || nomsJugadors.size() > 4) {
-            throw new IllegalArgumentException("Hi ha d'haver entre 2 i 4 jugadors");
+            throw new IllegalArgumentException("El nombre de jugadors ha de ser entre 2 i 4.");
         }
-
-        Transaction tx = null;
-        try (Session session = SessionManager.getSessionFactory().openSession()) {
-            tx = session.beginTransaction();
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
 
             Partida partida = new Partida();
             session.persist(partida);
@@ -47,7 +45,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 session.persist(jugador);
                 partida.getJugadors().add(jugador);
                 if (i == 0) {
-                    partida.setActiu(jugador); // comença l'ordreTorn 1
+                    partida.setActiu(jugador);
                 }
             }
 
@@ -58,13 +56,12 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             Hexagon desert = CarregadorTauler.carregarTauler(session, partida);
             partida.setLladre(desert);
 
-            tx.commit();
+            session.getTransaction().commit();
+
             return partida.getId();
         } catch (RuntimeException e) {
-            if (tx != null && tx.isActive()) {
-                tx.rollback();
-            }
-            throw e;
+            handleException(session, e);
+            return -1;
         }
     }
 
@@ -75,7 +72,9 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
     }
 
     public void mostrarTauler(int idPartida) {
-        try (Session session = SessionManager.getSessionFactory().openSession()) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
             Partida partida = session.get(Partida.class, idPartida);
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
@@ -119,11 +118,40 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                             + " al vèrtex " + assentament.getVertex().getCodi());
                 }
             }
+            session.getTransaction().commit();
+        } catch (RuntimeException e) {
+            handleException(session, e);
+        }
+    }
+
+    public void mostrarRecursos(int idJugador) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Jugador jugador = session.get(Jugador.class, idJugador);
+            if (jugador == null) {
+                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
+            }
+
+            List<RecursJugador> recursos = session
+                    .createNamedQuery("RecursJugador.perJugador", RecursJugador.class)
+                    .setParameter("idJugador", idJugador)
+                    .getResultList();
+
+            System.out.println("Recursos de " + jugador.getNom() + " (" + jugador.getColor() + ")");
+            for (RecursJugador r : recursos) {
+                System.out.println("  " + r.getTipusRecurs() + ": " + r.getQuantitat());
+            }
+            session.getTransaction().commit();
+        } catch (RuntimeException e) {
+            handleException(session, e);
         }
     }
 
     public void mostrarPartida(int idPartida) {
-        try (Session session = SessionManager.getSessionFactory().openSession()) {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
             Partida partida = session.get(Partida.class, idPartida);
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
@@ -173,7 +201,11 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         + " | Ciutats: " + ciutats
                         + " | Carreteres: " + carreteres);
                 System.out.println("Total de recursos: " + totalRecursos.intValue());
+
+                session.getTransaction().commit();
             }
+        } catch (RuntimeException e) {
+            handleException(session, e);
         }
     }
 

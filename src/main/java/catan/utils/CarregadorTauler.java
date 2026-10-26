@@ -65,7 +65,6 @@ public class CarregadorTauler {
         List<Integer> numeros = numerosBarrejats();
 
         Hexagon desert = null;
-        int indexNumero = 0;
         for (int i = 0; i < files.size(); i++) {
             String[] camps = files.get(i);
             int codi = Integer.parseInt(camps[0]);
@@ -73,7 +72,7 @@ public class CarregadorTauler {
             int r = Integer.parseInt(camps[2]);
 
             TipusTerreny terreny = terrenys.get(i);
-            Integer numero = (terreny == TipusTerreny.DESERT) ? null : numeros.get(indexNumero++);
+            Integer numero = (terreny == TipusTerreny.DESERT) ? null : numeros.get(i);
 
             Hexagon hexagon = new Hexagon(partida, codi, terreny, numero, q, r);
             session.persist(hexagon);
@@ -106,9 +105,9 @@ public class CarregadorTauler {
 
     private static void carregarArestes(Session session, Partida partida, Map<String, Vertex> vertexs) {
         for (String[] camps : llegirCsv("arestes.csv")) {
-            Vertex a = obtenir(vertexs, camps[1], "arestes.csv");
-            Vertex b = obtenir(vertexs, camps[2], "arestes.csv");
-            session.persist(new Aresta(partida, Integer.parseInt(camps[0]), a, b));
+            Vertex vertexA = obtenir(vertexs, camps[1], "arestes.csv");
+            Vertex vertexB = obtenir(vertexs, camps[2], "arestes.csv");
+            session.persist(new Aresta(partida, Integer.parseInt(camps[0]), vertexA, vertexB));
         }
     }
 
@@ -116,9 +115,9 @@ public class CarregadorTauler {
             Map<String, Vertex> vertexs) {
         List<String[]> dades = llegirCsv("hexagon_vertex.csv");
         for (String[] camps : dades) {
-            Hexagon h = obtenir(hexagons, camps[0], "hexagon_vertex.csv");
-            Vertex v = obtenir(vertexs, camps[1], "hexagon_vertex.csv");
-            session.persist(new HexagonVertex(h, v, Integer.parseInt(camps[2])));
+            Hexagon hexagon = obtenir(hexagons, camps[0], "hexagon_vertex.csv");
+            Vertex vertex = obtenir(vertexs, camps[1], "hexagon_vertex.csv");
+            session.persist(new HexagonVertex(hexagon, vertex, Integer.parseInt(camps[2])));
         }
     }
 
