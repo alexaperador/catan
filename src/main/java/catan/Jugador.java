@@ -10,12 +10,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -62,6 +62,9 @@ public class Jugador {
     @OneToMany(mappedBy = "ma", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartaDesenvolupament> cartesDesenvolupament = new ArrayList<>();
 
+    @OneToMany (mappedBy = "propietari", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Construccio> construccions = new ArrayList<>();
+
     protected Jugador() {
     }
 
@@ -71,6 +74,8 @@ public class Jugador {
         this.ordreTorn = ordreTorn;
         this.partida = partida;
     }
+
+    
 
     public Integer getId() {
         return id;
@@ -130,6 +135,14 @@ public class Jugador {
 
     public void setCartesDesenvolupament(List<CartaDesenvolupament> cartesDesenvolupament) {
         this.cartesDesenvolupament = cartesDesenvolupament;
+    }
+
+    public List<Construccio> getConstruccions() {
+        return construccions;
+    }
+
+    public void setConstruccions(List<Construccio> construccions) {
+        this.construccions = construccions;
     }
 
 }

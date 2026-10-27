@@ -217,8 +217,11 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
 
     public Jugador exercitMesGran(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
+        boolean transaccioIniciada = !session.getTransaction().isActive();
         try {
-            session.beginTransaction();
+            if (transaccioIniciada) {
+                session.beginTransaction();
+            }
             Partida partida = session.get(Partida.class, idPartida);
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
