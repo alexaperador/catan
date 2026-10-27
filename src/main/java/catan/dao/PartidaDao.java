@@ -2,9 +2,12 @@ package catan.dao;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.hibernate.Session;
 
@@ -17,8 +20,10 @@ import catan.Partida;
 import catan.RecursJugador;
 import catan.Vertex;
 import catan.enums.ColorJugador;
+import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
+import catan.enums.TipusTerreny;
 import catan.utils.CarregadorTauler;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
@@ -28,6 +33,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         if (nomsJugadors == null || nomsJugadors.size() < 2 || nomsJugadors.size() > 4) {
             throw new IllegalArgumentException("El nombre de jugadors ha de ser entre 2 i 4.");
         }
+
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -286,15 +292,207 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         }
     }
 
-    @Override
-    public void tirarDaus(int idPartida) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'tirarDaus'");
-    }
+
 
     @Override
-    public void comprovarVictoria(int idPartida) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'comprovarVictoria'");
+    public Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida) {
+        Random RANDOM = new Random();
+        Session session = sessionFactory.getCurrentSession();
+    try {
+        session.beginTransaction();
+
+        Partida partida = session.get(Partida.class, idPartida);
+        if (partida == null) {
+            throw new IllegalArgumentException("No existeix la partida: " + idPartida);
+        }
+        if (partida.getEstat() == EstatPartida.FINALITZADA) {
+            throw new IllegalStateException("La partida ja ha finalitzat");
+        }
+        if (partida.getEstat() != EstatPartida.EN_CURS) {
+            throw new IllegalStateException("La partida no està en curs");
+        }
+        if (partida.getDausTirats()) {
+            throw new IllegalStateException("Ja has tirat els daus aquest torn");
+        }
+        if (partida.getLladrePendent()) {
+            throw new IllegalStateException("Has de moure el lladre abans");
+        }
+
+        Map<Integer, Map<TipusRecurs, Integer>> resum = new LinkedHashMap<>();
+        for (Jugador j : partida.getJugadors()) {
+            resum.put(j.getId(), new EnumMap<>(TipusRecurs.class));
+        }
+
+        int tirada = (RANDOM.nextInt(6) + 1) + (RANDOM.nextInt(6) + 1);
+        partida.setUltimaTirada(tirada);
+        partida.setDausTirats(true);
+
+        if (tirada == 7) {
+            for (Jugador j : partida.getJugadors()) {
+                descartarMeitat(session, j);
+            }
+            partida.setLladrePendent(true);
+        } else {
+            Integer idLladre = (partida.getLladre() != null) ? partida.getLladre().getId() : null;
+
+            List<Object[]> files = session.createQuery(
+                    "SELECT h, a FROM HexagonVertex hv JOIN hv.hexagon h, Assentament a "
+                            + "WHERE a.vertex = hv.vertex "
+                            + "AND h.partida.id = :idPartida AND h.numero = :numero",
+                    Object[].class)
+                    .setParameter("idPartida", idPartida)
+                    .setParameter("numero", tirada)
+                    .getResultList();
+
+            for (Object[] fila : files) {
+                Hexagon hexagon = (Hexagon) fila[0];
+                Assentament assentament = (Assentament) fila[1];
+
+                if (hexagon.getId().equals(idLladre)) {
+                    continue; 
+                TipusRecurs recurs = recursDelTerreny(hexagon.getTerreny());
+                if (recurs == null) {
+                    continue; 
+                }
+                int quantitat = (assentament instanceof Ciutat) ? 2 : 1;
+
+                Jugador propietari = assentament.getPropietari();
+                RecursJugador rj = session
+                        .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
+                        .setParameter("idJugador", propietari.getId())
+                        .setParameter("tipus", recurs)
+                        .getSingleResult();
+                rj.setQuantitat(rj.getQuantitat() + quantitat);
+
+                resum.get(propietari.getId()).merge(recurs, quantitat, Integer::sum);
+            }
+        }
+
+        session.getTransaction().commit();
+        System.out.println("Tirada: " + tirada);
+        return resum;
+    } catch (RuntimeException e) {
+        handleException(session, e);
+        throw e; 
+    }
+}
+
+private TipusRecurs recursDelTerreny(TipusTerreny terreny) {
+    switch (terreny) {
+        case BOSC:       return TipusRecurs.FUSTA;
+        case TURONS:     return TipusRecurs.MAO;
+        case PASTURES:   return TipusRecurs.LLANA;
+        case CAMPS:      return TipusRecurs.BLAT;
+        case MUNTANYES:  return TipusRecurs.MINERAL;
+        default:         return null; // DESERT
+    }
+}
+
+private void descartarMeitat(Session session, Jugador jugador) {
+    List<RecursJugador> inventari = session
+            .createNamedQuery("RecursJugador.perJugador", RecursJugador.class)
+            .setParameter("idJugador", jugador.getId())
+            .getResultList();
+
+    int total = inventari.stream().mapToInt(RecursJugador::getQuantitat).sum();
+    if (total <= 7) {
+        return;
+    }
+    List<RecursJugador> fitxes = new ArrayList<>();
+    for (RecursJugador rj : inventari) {
+        for (int i = 0; i < rj.getQuantitat(); i++) {
+            fitxes.add(rj);
+        }
+    }
+    Collections.shuffle(fitxes);
+    for (int i = 0; i < total / 2; i++) {
+        RecursJugador rj = fitxes.get(i);
+        rj.setQuantitat(rj.getQuantitat() - 1);
+        }
+    }
+
+
+
+
+    
+
+
+@Override
+public void comprovarVictoria(int idPartida) {
+    Session session = sessionFactory.getCurrentSession();
+    try {
+        session.beginTransaction();
+
+        Partida partida = session.get(Partida.class, idPartida);
+        if (partida == null) {
+            throw new IllegalArgumentException("No existeix la partida: " + idPartida);
+        }
+        if (partida.getEstat() != EstatPartida.EN_CURS) {
+            session.getTransaction().commit();
+            return; // només té sentit en una partida en curs
+        }
+
+        Jugador exercit = jugadorExercitMesGran(session, idPartida);
+
+        Jugador guanyador = null;
+        int milloresPunts = 0;
+        for (Jugador j : partida.getJugadors()) {
+            int punts = calcularPunts(session, j, exercit);
+            if (punts >= partida.getPuntsPerGuanyar() && punts > milloresPunts) {
+                guanyador = j;
+                milloresPunts = punts;
+            }
+        }
+
+        if (guanyador != null) {
+            partida.setEstat(EstatPartida.FINALITZADA);
+            partida.setGuanyador(guanyador);
+            System.out.println(guanyador.getNom() + " ha guanyat amb " + milloresPunts + " punts!");
+        }
+
+        session.getTransaction().commit();
+    } catch (RuntimeException e) {
+        handleException(session, e);
+        throw e;
+    }
+}
+
+private int calcularPunts(Session session, Jugador jugador, Jugador exercitMesGran) {
+    int id = jugador.getId();
+    long poblats = session
+            .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
+            .setParameter("id", id).uniqueResult();
+    long ciutats = session
+            .createQuery("SELECT COUNT(c) FROM Ciutat c WHERE c.propietari.id = :id", Long.class)
+            .setParameter("id", id).uniqueResult();
+    long cartesPunt = session.createQuery(
+            "SELECT COUNT(c) FROM CartaDesenvolupament c WHERE c.ma.id = :id AND c.tipusCarta = :tipus",
+            Long.class)
+            .setParameter("id", id)
+            .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
+            .uniqueResult();
+
+    int punts = (int) (poblats + 2 * ciutats + cartesPunt);
+    if (exercitMesGran != null && exercitMesGran.getId().equals(id)) {
+        punts += 2;
+    }
+    return punts;
+}
+
+/** Mateixa lògica que exercitMesGran, però dins la transacció ja oberta. */
+private Jugador jugadorExercitMesGran(Session session, int idPartida) {
+    List<Jugador> top = session
+            .createQuery("FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.cavallersJugats DESC",
+                    Jugador.class)
+            .setParameter("idPartida", idPartida)
+            .setMaxResults(2)
+            .getResultList();
+    if (top.isEmpty() || top.get(0).getCavallersJugats() < 3) {
+        return null;
+    }
+    if (top.size() > 1 && top.get(1).getCavallersJugats() == top.get(0).getCavallersJugats()) {
+        return null;
+    }
+    return top.get(0);
     }
 }
