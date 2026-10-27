@@ -350,6 +350,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
 
                 if (hexagon.getId().equals(idLladre)) {
                     continue; 
+                }
                 TipusRecurs recurs = recursDelTerreny(hexagon.getTerreny());
                 if (recurs == null) {
                     continue; 
@@ -384,7 +385,7 @@ private TipusRecurs recursDelTerreny(TipusTerreny terreny) {
         case PASTURES:   return TipusRecurs.LLANA;
         case CAMPS:      return TipusRecurs.BLAT;
         case MUNTANYES:  return TipusRecurs.MINERAL;
-        default:         return null; // DESERT
+        default:         return null;  
     }
 }
 
@@ -429,7 +430,7 @@ public void comprovarVictoria(int idPartida) {
         }
         if (partida.getEstat() != EstatPartida.EN_CURS) {
             session.getTransaction().commit();
-            return; // només té sentit en una partida en curs
+            return; 
         }
 
         Jugador exercit = jugadorExercitMesGran(session, idPartida);
@@ -479,7 +480,7 @@ private int calcularPunts(Session session, Jugador jugador, Jugador exercitMesGr
     return punts;
 }
 
-/** Mateixa lògica que exercitMesGran, però dins la transacció ja oberta. */
+
 private Jugador jugadorExercitMesGran(Session session, int idPartida) {
     List<Jugador> top = session
             .createQuery("FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.cavallersJugats DESC",
