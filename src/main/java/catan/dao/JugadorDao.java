@@ -5,9 +5,11 @@ import java.util.Random;
 
 import org.hibernate.Session;
 
+import catan.Aresta;
 import catan.Carretera;
 import catan.CartaDesenvolupament;
 import catan.Ciutat;
+import catan.Hexagon;
 import catan.Jugador;
 import catan.Partida;
 import catan.Poblat;
