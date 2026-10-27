@@ -307,27 +307,13 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 puntsJugador += cartes.size();
             }
             List<Jugador> TotsJugadors = partida.getJugadors();
+
+            Jugador exercitMesGran = new PartidaDao().exercitMesGran(partida.getId());
+            if (exercitMesGran != null && exercitMesGran.getId().equals(idJugador)) {
+                puntsJugador += 2;
+            }
+
             for (Jugador j : TotsJugadors) {
-                boolean exercitMesGran = false;
-                if (!j.getId().equals(idJugador)) {
-                    if (j.getCavallersJugats() > jugador.getCavallersJugats() && !exercitMesGran) {
-                        puntsJugador += 2;
-                        exercitMesGran = true;
-                    }
-                    else if (j.getCavallersJugats() < jugador.getCavallersJugats()) {
-                        exercitMesGran = false;
-                    }
-                    else if (j.getCavallersJugats() < jugador.getCavallersJugats() && !exercitMesGran) {
-                        puntsJugador -= 2;
-                        exercitMesGran = false;
-                    }
-                    else if (j.getCavallersJugats() == jugador.getCavallersJugats() && !exercitMesGran) {
-                        exercitMesGran = false;
-                    }
-                    else if (j.getCavallersJugats() == jugador.getCavallersJugats() && exercitMesGran) {
-                        puntsJugador -= 2;
-                        exercitMesGran = false;
-                    }
                     List<Carretera> carreteres = session.createNamedQuery("Carretera.perJugador", Carretera.class)
                             .setParameter("idJugador", idJugador)
                             .getResultList();
@@ -354,7 +340,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                         carreteraMesGran = false;
                     }
                 }
-            }
 
             return puntsJugador;
 

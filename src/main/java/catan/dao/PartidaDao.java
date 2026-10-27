@@ -212,8 +212,11 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
 
     public Jugador exercitMesGran(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
+        boolean transaccioIniciada = !session.getTransaction().isActive();
         try {
-            session.beginTransaction();
+            if (transaccioIniciada) {
+                session.beginTransaction();
+            }
             Partida partida = session.get(Partida.class, idPartida);
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
@@ -227,18 +230,29 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                     .getResultList();
 
             if (top.isEmpty()) {
+                if (transaccioIniciada) {
+                    session.getTransaction().commit();
+                }
                 return null;
             }
             Jugador primer = top.get(0);
 
             if (primer.getCavallersJugats() < 3) {
+                if (transaccioIniciada) {
+                    session.getTransaction().commit();
+                }
                 return null;
             }
 
             if (top.size() > 1 && top.get(1).getCavallersJugats() == primer.getCavallersJugats()) {
+                if (transaccioIniciada) {
+                    session.getTransaction().commit();
+                }
                 return null;
             }
-            session.getTransaction().commit();
+            if (transaccioIniciada) {
+                session.getTransaction().commit();
+            }
             return primer;
 
         } catch (RuntimeException e) {
