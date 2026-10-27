@@ -17,6 +17,7 @@ import catan.Partida;
 import catan.RecursJugador;
 import catan.Vertex;
 import catan.enums.ColorJugador;
+import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
 import catan.utils.CarregadorTauler;
@@ -225,20 +226,18 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                     .setMaxResults(2)
                     .getResultList();
 
-            if (top.isEmpty()) {
-                return null;
+            Jugador guanyador = null;
+            if (!top.isEmpty()) {
+                Jugador primer = top.get(0);
+                boolean prouCavallers = primer.getCavallersJugats() >= 3;
+                boolean empat = top.size() > 1 && top.get(1).getCavallersJugats() == primer.getCavallersJugats();
+                if (prouCavallers && !empat) {
+                    guanyador = primer;
+                }
             }
-            Jugador primer = top.get(0);
 
-            if (primer.getCavallersJugats() < 3) {
-                return null;
-            }
-
-            if (top.size() > 1 && top.get(1).getCavallersJugats() == primer.getCavallersJugats()) {
-                return null;
-            }
             session.getTransaction().commit();
-            return primer;
+            return guanyador;
 
         } catch (RuntimeException e) {
             handleException(session, e);
@@ -256,7 +255,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             }
 
             Partida partida = jugador.getPartida();
-            boolean preparacio = partida.getEstat().equals("PREPARACIO");
+            boolean preparacio = partida.getEstat().equals(EstatPartida.PREPARACIO);
 
             String hql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
                     + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "
@@ -277,8 +276,9 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             if (!preparacio) {
                 query.setParameter("idJugador", idJugador);
             }
+            List<Vertex> vertexs = query.getResultList();
             session.getTransaction().commit();
-            return query.getResultList();
+            return vertexs;
         } catch (RuntimeException e) {
             handleException(session, e);
             return Collections.emptyList();
