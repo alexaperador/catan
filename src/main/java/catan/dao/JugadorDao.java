@@ -5,9 +5,11 @@ import java.util.Random;
 
 import org.hibernate.Session;
 
+import catan.Aresta;
 import catan.Carretera;
 import catan.CartaDesenvolupament;
 import catan.Ciutat;
+import catan.Hexagon;
 import catan.Jugador;
 import catan.Partida;
 import catan.Poblat;
@@ -643,77 +645,55 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
     @Override
     public int calcularPunts(int idJugador) {
         Session session = sessionFactory.getCurrentSession();
+
         try {
             session.beginTransaction();
 
-            int puntsJugador = 0;
             Jugador jugador = session.get(Jugador.class, idJugador);
+
             if (jugador == null) {
                 throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
             }
-            Partida partida = jugador.getPartida();
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
-            for(int i = 0; i < jugador.getConstruccions().size(); i++){
-                List<Poblat> poblats = session.createNamedQuery("Poblat.perJugador", Poblat.class)
-                        .setParameter("idJugador", idJugador)
-                        .getResultList();
-                puntsJugador += poblats.size();
-                List<Ciutat> ciutats = session.createNamedQuery("Ciutat.perJugador", Ciutat.class)
-                        .setParameter("idJugador", idJugador)
-                        .getResultList();
-                puntsJugador += ciutats.size() * 2;
-                List<CartaDesenvolupament> cartes = session.createNamedQuery("CartaDesenvolupament.perJugador", CartaDesenvolupament.class)
-                        .setParameter("idJugador", idJugador)
-                        .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
-                        .getResultList();
-                puntsJugador += cartes.size();
-            }
-            List<Jugador> TotsJugadors = partida.getJugadors();
 
-            Jugador exercitMesGran = new PartidaDao().exercitMesGran(partida.getId());
+            Long numPoblats = session.createQuery(
+                    "SELECT COUNT(p) " +
+                            "FROM Poblat p " +
+                            "WHERE p.propietari.id = :idJugador",
+                    Long.class)
+                    .setParameter("idJugador", idJugador)
+                    .getSingleResult();
+
+            Long numCiutats = session.createQuery(
+                    "SELECT COUNT(c) " +
+                            "FROM Ciutat c " +
+                            "WHERE c.propietari.id = :idJugador",
+                    Long.class)
+                    .setParameter("idJugador", idJugador)
+                    .getSingleResult();
+
+            Long numCartesPuntVictoria = session.createQuery(
+                    "SELECT COUNT(c) " +
+                            "FROM CartaDesenvolupament c " +
+                            "WHERE c.ma.id = :idJugador " +
+                            "AND c.tipusCarta = :tipus",
+                    Long.class)
+                    .setParameter("idJugador", idJugador)
+                    .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
+                    .getSingleResult();
+
+            int punts = numPoblats.intValue() + (numCiutats.intValue() * 2) + numCartesPuntVictoria.intValue();
+
+            Jugador exercitMesGran = new PartidaDao().exercitMesGran(jugador.getPartida().getId());
+
             if (exercitMesGran != null && exercitMesGran.getId().equals(idJugador)) {
-                puntsJugador += 2;
+                punts += 2;
             }
 
-            for (Jugador j : TotsJugadors) {
-                    List<Carretera> carreteres = session.createNamedQuery("Carretera.perJugador", Carretera.class)
-                            .setParameter("idJugador", idJugador)
-                            .getResultList();
-                    List<Carretera> carreteresRivals = session.createNamedQuery("Carretera.perJugador", Carretera.class)
-                            .setParameter("idJugador", j.getId())
-                            .getResultList();
-                    boolean carreteraMesGran = false;
-                    if(carreteres.size() > carreteresRivals.size() && !carreteraMesGran){
-                        puntsJugador += 2;
-                        carreteraMesGran = true;
-                    }
-                    else if(carreteres.size() < carreteresRivals.size()){
-                        carreteraMesGran = false;
-                    }
-                    else if(carreteres.size() < carreteresRivals.size() && !carreteraMesGran){
-                        puntsJugador -= 2;
-                        carreteraMesGran = false;
-                    }
-                    else if(carreteres.size() == carreteresRivals.size() && !carreteraMesGran){
-                        carreteraMesGran = false;
-                    }
-                    else if(carreteres.size() == carreteresRivals.size() && carreteraMesGran){
-                        puntsJugador -= 2;
-                        carreteraMesGran = false;
-                    }
-                }
+            session.getTransaction().commit();
 
-            return puntsJugador;
+            return punts;
 
-        }catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             handleException(session, e);
             throw e;
         }
@@ -743,76 +723,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
 
             boolean preparacio = partida.getEstat() == EstatPartida.PREPARACIO;
 
-            if (preparacio) {
-                long poblats = session
-                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
-                        .setParameter("id", idJugador)
-                        .getSingleResult();
-                if (poblats != partida.getRonda()) {
-                    throw new IllegalStateException("Has de col·locar el poblat d'aquest torn");
-                }
-                long carreteres = session
-                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
-                        .setParameter("id", idJugador)
-                        .getSingleResult();
-                if (carreteres != partida.getRonda()) {
-                    throw new IllegalStateException("Has de col·locar la carretera d'aquest torn");
-                }
-            } else if (!partida.getDausTirats()) {
-                throw new IllegalStateException("Has de tirar els daus abans de passar el torn");
-            }
-
-            List<Jugador> jugadors = session
-                    .createNamedQuery("Jugador.perPartida", Jugador.class)
-                    .setParameter("idPartida", partida.getId())
-                    .getResultList();
-            int n = jugadors.size();
-            int ordre = jugador.getOrdreTorn();
-            Jugador seguent;
-
-            if (preparacio) {
-                if (partida.getRonda() == 1) {
-                    if (ordre < n) {
-                        seguent = jugadors.get(ordre);
-                    } else {
-                        partida.setRonda(2);
-                        seguent = jugador;
-                    }
-                } else {
-                    if (ordre > 1) {
-                        seguent = jugadors.get(ordre - 2);
-                    } else {
-                        long totalPoblats = session
-                                .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.partida.id = :id",
-                                        Long.class)
-                                .setParameter("id", partida.getId())
-                                .getSingleResult();
-                        long totalCarreteres = session
-                                .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.partida.id = :id",
-                                        Long.class)
-                                .setParameter("id", partida.getId())
-                                .getSingleResult();
-                        if (totalPoblats != 2L * n || totalCarreteres != 2L * n) {
-                            throw new IllegalStateException("Encara hi ha jugadors que no han acabat la preparació");
-                        }
-                        partida.setEstat(EstatPartida.EN_CURS);
-                        partida.setRonda(1);
-                        seguent = jugadors.get(0);
-                    }
-                }
-            } else {
-                seguent = jugadors.get(ordre % n);
-                if (seguent.getOrdreTorn() == 1) {
-                    partida.setRonda(partida.getRonda() + 1);
-                }
-            }
-
-            partida.setActiu(seguent);
-            partida.setDausTirats(false);
-
-            session.getTransaction().commit();
-            System.out.println(jugador.getNom() + " passa el torn. Ara juga " + seguent.getNom()
-                    + " (ronda " + partida.getRonda() + ", " + partida.getEstat() + ")");
         } catch (RuntimeException e) {
             handleException(session, e);
             throw e;
