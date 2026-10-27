@@ -4,11 +4,15 @@ import java.util.List;
 
 import org.hibernate.Session;
 
+import catan.Carretera;
 import catan.CartaDesenvolupament;
+import catan.Ciutat;
 import catan.Jugador;
 import catan.Partida;
+import catan.Poblat;
 import catan.RecursJugador;
 import catan.enums.EstatPartida;
+import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
 
 public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugadorDao {
@@ -230,7 +234,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                     }
                     break;
                 case PUNT_VICTORIA:
-                    
+                    calcularPunts(idJugador);
                     break;
                 case CAVALLER:
                     int cantitatCavallers = jugador.getCavallersJugats() + 1;
@@ -268,8 +272,96 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
 
     @Override
     public int calcularPunts(int idJugador) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'calcularPunts'");
+        Session session = sessionFactory.getCurrentSession();
+        try {
+            session.beginTransaction();
+
+            int puntsJugador = 0;
+            Jugador jugador = session.get(Jugador.class, idJugador);
+            if (jugador == null) {
+                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
+            }
+            Partida partida = jugador.getPartida();
+            if (partida.getEstat() == EstatPartida.FINALITZADA) {
+                throw new IllegalStateException("La partida ja ha finalitzat");
+            }
+            if (partida.getEstat() != EstatPartida.EN_CURS) {
+                throw new IllegalStateException("La partida no està en curs");
+            }
+            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
+                throw new IllegalStateException("No és el teu torn");
+            }
+            for(int i = 0; i < jugador.getConstruccions().size(); i++){
+                List<Poblat> poblats = session.createNamedQuery("Poblat.perJugador", Poblat.class)
+                        .setParameter("idJugador", idJugador)
+                        .getResultList();
+                puntsJugador += poblats.size();
+                List<Ciutat> ciutats = session.createNamedQuery("Ciutat.perJugador", Ciutat.class)
+                        .setParameter("idJugador", idJugador)
+                        .getResultList();
+                puntsJugador += ciutats.size() * 2;
+                List<CartaDesenvolupament> cartes = session.createNamedQuery("CartaDesenvolupament.perJugador", CartaDesenvolupament.class)
+                        .setParameter("idJugador", idJugador)
+                        .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
+                        .getResultList();
+                puntsJugador += cartes.size();
+            }
+            List<Jugador> TotsJugadors = partida.getJugadors();
+            for (Jugador j : TotsJugadors) {
+                boolean exercitMesGran = false;
+                if (!j.getId().equals(idJugador)) {
+                    if (j.getCavallersJugats() > jugador.getCavallersJugats() && !exercitMesGran) {
+                        puntsJugador += 2;
+                        exercitMesGran = true;
+                    }
+                    else if (j.getCavallersJugats() < jugador.getCavallersJugats()) {
+                        exercitMesGran = false;
+                    }
+                    else if (j.getCavallersJugats() < jugador.getCavallersJugats() && !exercitMesGran) {
+                        puntsJugador -= 2;
+                        exercitMesGran = false;
+                    }
+                    else if (j.getCavallersJugats() == jugador.getCavallersJugats() && !exercitMesGran) {
+                        exercitMesGran = false;
+                    }
+                    else if (j.getCavallersJugats() == jugador.getCavallersJugats() && exercitMesGran) {
+                        puntsJugador -= 2;
+                        exercitMesGran = false;
+                    }
+                    List<Carretera> carreteres = session.createNamedQuery("Carretera.perJugador", Carretera.class)
+                            .setParameter("idJugador", idJugador)
+                            .getResultList();
+                    List<Carretera> carreteresRivals = session.createNamedQuery("Carretera.perJugador", Carretera.class)
+                            .setParameter("idJugador", j.getId())
+                            .getResultList();
+                    boolean carreteraMesGran = false;
+                    if(carreteres.size() > carreteresRivals.size() && !carreteraMesGran){
+                        puntsJugador += 2;
+                        carreteraMesGran = true;
+                    }
+                    else if(carreteres.size() < carreteresRivals.size()){
+                        carreteraMesGran = false;
+                    }
+                    else if(carreteres.size() < carreteresRivals.size() && !carreteraMesGran){
+                        puntsJugador -= 2;
+                        carreteraMesGran = false;
+                    }
+                    else if(carreteres.size() == carreteresRivals.size() && !carreteraMesGran){
+                        carreteraMesGran = false;
+                    }
+                    else if(carreteres.size() == carreteresRivals.size() && carreteraMesGran){
+                        puntsJugador -= 2;
+                        carreteraMesGran = false;
+                    }
+                }
+            }
+
+            return puntsJugador;
+
+        }catch (RuntimeException e) {
+            handleException(session, e);
+            throw e;
+        }
     }
 
     @Override
