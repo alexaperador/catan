@@ -202,9 +202,8 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         + " | Ciutats: " + ciutats
                         + " | Carreteres: " + carreteres);
                 System.out.println("Total de recursos: " + totalRecursos.intValue());
-
-                session.getTransaction().commit();
             }
+            session.getTransaction().commit();
         } catch (RuntimeException e) {
             handleException(session, e);
         }
