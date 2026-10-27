@@ -180,6 +180,14 @@ public class Partida {
         this.jugadors = jugadors;
     }
 
+    public void addJugador(Jugador jugador) {
+        this.jugadors.add(jugador);
+    }
+
+    public boolean removeJugador(Jugador jugador) {
+        return this.jugadors.remove(jugador);
+    }
+
     public Jugador getActiu() {
         return actiu;
     }
@@ -204,6 +212,14 @@ public class Partida {
         this.pila = pila;
     }
 
+    public void addCartaDesenvolupament(CartaDesenvolupament carta) {
+        this.pila.add(carta);
+    }
+
+    public boolean removeCartaDesenvolupament(CartaDesenvolupament carta) {
+        return this.pila.remove(carta);
+    }
+
     public Hexagon getLladre() {
         return lladre;
     }
@@ -220,6 +236,10 @@ public class Partida {
         this.tauler = tauler;
     }
 
+    public void addHexagon(Hexagon hexagon) {
+        this.tauler.add(hexagon);
+    }
+
     public List<Vertex> getVertexs() {
         return vertexs;
     }
@@ -228,11 +248,19 @@ public class Partida {
         this.vertexs = vertexs;
     }
 
+    public void addVertex(Vertex vertex) {
+        this.vertexs.add(vertex);
+    }
+
     public List<Aresta> getArestes() {
         return arestes;
     }
 
     public void setArestes(List<Aresta> arestes) {
         this.arestes = arestes;
+    }
+
+    public void addAresta(Aresta aresta) {
+        this.arestes.add(aresta);
     }
 }
