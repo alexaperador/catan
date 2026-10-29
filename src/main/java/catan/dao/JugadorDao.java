@@ -132,11 +132,12 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("No és el teu torn");
             }
             if (!partida.getDausTirats()) {
-                throw new IllegalStateException("Has de tirar els daus abans de comerciar");
+                throw new IllegalStateException("Has de tirar els daus abans de comprar una carta");
             }
             if (partida.getLladrePendent()) {
-                throw new IllegalStateException("Has de moure el lladre abans de comerciar");
+                throw new IllegalStateException("Has de moure el lladre abans de comprar una carta");
             }
+            
 
             RecursJugador recursDonaBlat = session
                     .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
@@ -170,8 +171,14 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             recursDonaLlana.setQuantitat(recursDonaLlana.getQuantitat() - 1);
             recursDonaMineral.setQuantitat(recursDonaMineral.getQuantitat() - 1);
 
-            CartaDesenvolupament carta = partida.getPila().remove(0);
-            jugador.getCartesDesenvolupament().add(carta);
+            List<CartaDesenvolupament> pilaLliure = session
+                    .createQuery("FROM CartaDesenvolupament c WHERE c.pila.id = :idPartida AND c.ma IS NULL",
+                            CartaDesenvolupament.class)
+                    .setParameter("idPartida", partida.getId())
+                    .getResultList();
+            if (pilaLliure.isEmpty()) {
+                throw new IllegalStateException("La pila de cartes de desenvolupament és buida");
+            }
 
             session.getTransaction().commit();
             System.out.println(jugador.getNom() + " ha comprat una carta de desenvolupament");
@@ -304,10 +311,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("L'aresta ja està ocupada");
             }
 
-            long carreteres = session
-                    .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
-                    .setParameter("id", idJugador)
-                    .uniqueResult();
+            long carreteres = totalCarreteres(idJugador, session);
             if (carreteres >= 15) {
                 throw new IllegalStateException("Has assolit el límit de 15 carreteres");
             }
@@ -316,10 +320,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             int vB = aresta.getVertexB().getId();
 
             if (preparacio) {
-                long poblats = session
-                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
-                        .setParameter("id", idJugador)
-                        .uniqueResult();
+                long poblats = totalPoblats(idJugador, session);
                 if (poblats != partida.getRonda()) {
                     throw new IllegalStateException("Primer has de col·locar el poblat d'aquest torn");
                 }
@@ -454,19 +455,13 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("Regla de la distància: hi ha una construcció en un vèrtex adjacent");
             }
 
-            long poblats = session
-                    .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
-                    .setParameter("id", idJugador)
-                    .uniqueResult();
+            long poblats = totalPoblats(idJugador, session);
             if (poblats >= 5) {
                 throw new IllegalStateException("Has assolit el límit de 5 poblats");
             }
 
             if (preparacio) {
-                long carreteres = session
-                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
-                        .setParameter("id", idJugador)
-                        .uniqueResult();
+                long carreteres = totalCarreteres(idJugador, session);
                 if (poblats != partida.getRonda() - 1) {
                     throw new IllegalStateException("Ja has col·locat el poblat d'aquest torn");
                 }
@@ -699,6 +694,18 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         }
     }
 
+    private long totalPoblats(int idJugador, Session session) {
+        return session
+                .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
+                .setParameter("id", idJugador).uniqueResult();
+    }
+
+    private long totalCarreteres(int idJugador, Session session) {
+        return session
+                .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
+                .setParameter("id", idJugador).uniqueResult();
+    }
+
     @Override
     public void passarTorn(int idJugador) {
         Session session = sessionFactory.getCurrentSession();
@@ -723,6 +730,85 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
 
             boolean preparacio = partida.getEstat() == EstatPartida.PREPARACIO;
 
+            List<Jugador> jugadors = session
+                    .createNamedQuery("Jugador.perPartida", Jugador.class)
+                    .setParameter("idPartida", partida.getId())
+                    .getResultList();
+            int totalJugadors = jugadors.size();
+            int ordre = jugador.getOrdreTorn();
+            int ronda = partida.getRonda();
+            int nouOrdre;
+            int nuevaRonda = ronda;
+            boolean acabarPreparacio = false;
+
+            if (preparacio) {
+                long poblats = totalPoblats(idJugador, session);
+                long carreteres = totalCarreteres(idJugador, session);
+                if (poblats != ronda) {
+                    throw new IllegalStateException("Primer has de col·locar el teu poblat d'aquesta ronda");
+                }
+                if (carreteres != ronda) {
+                    throw new IllegalStateException("Primer has de col·locar la teva carretera d'aquesta ronda");
+                }
+
+                // Ronda 1: Jugador 1 -> Jugador 2 -> Jugador 3 -> Jugador 4
+                // Ronda 2: Jugador 4 -> Jugador 3 -> Jugador 2 -> Jugador 1
+                if (ronda == 1) {
+                    if (ordre < totalJugadors) {
+                        nouOrdre = ordre + 1;
+                    } else {
+                        nouOrdre = totalJugadors;
+                        nuevaRonda = 2;
+                    }
+                } else {
+                    if (ordre > 1) {
+                        nouOrdre = ordre - 1;
+                    } else {
+                        acabarPreparacio = true;
+                        nouOrdre = 1;
+                    }
+                }
+
+                if (acabarPreparacio) {
+                    for (Jugador j : jugadors) {
+                        long totalPoblats = totalPoblats(j.getId(), session);
+                        long totalCarreteres = totalCarreteres(j.getId(), session);
+                        if (totalPoblats != 2 || totalCarreteres != 2) {
+                            throw new IllegalStateException(
+                                    "Tots els jugadors han de tenir 2 poblats i 2 carreteres");
+                        }
+                    }
+                    partida.setEstat(EstatPartida.EN_CURS);
+                    nuevaRonda = 1;
+                }
+            } else {
+                if (!partida.getDausTirats()) {
+                    throw new IllegalStateException("Has de tirar els daus abans de passar el torn");
+                }
+                nouOrdre = (ordre % totalJugadors) + 1;
+                if (nouOrdre == 1) {
+                    nuevaRonda = ronda + 1; // el torn torna al jugador d'ordreTorn 1
+                }
+            }
+
+            Jugador seguent = null;
+            for (Jugador j : jugadors) {
+                if (j.getOrdreTorn() == nouOrdre) {
+                    seguent = j;
+                    break;
+                }
+            }
+            if (seguent == null) {
+                throw new IllegalStateException("No s'ha trobat el jugador amb ordre de torn " + nouOrdre);
+            }
+
+            partida.setActiu(seguent);
+            partida.setRonda(nuevaRonda);
+            partida.setDausTirats(false);
+
+            session.getTransaction().commit();
+            System.out.println(jugador.getNom() + " passa el torn. Ara juga " + seguent.getNom()
+                    + " (ronda " + nuevaRonda + ", " + partida.getEstat() + ")");
         } catch (RuntimeException e) {
             handleException(session, e);
             throw e;
