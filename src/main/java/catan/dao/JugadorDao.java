@@ -271,9 +271,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
 
                     throw new IllegalStateException("Les cartes de punt de victòria no es juguen");
                 case CAVALLER:
-                    if (!jugador.potJugarCavaller()) {
-                        throw new IllegalStateException("Aquest jugador no pot jugar més cavallers");
-                    }
                     int cantitatCavallers = jugador.getCavallersJugats() + 1;
                     jugador.setCavallersJugats(cantitatCavallers);
                     partida.setLladrePendent(true);

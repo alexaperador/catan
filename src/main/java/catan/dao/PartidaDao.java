@@ -175,6 +175,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                     .createNamedQuery("Jugador.perPartida", Jugador.class)
                     .setParameter("idPartida", idPartida)
                     .getResultList();
+            Jugador exercitMesGran = exercitMesGran(idPartida);
 
             for (Jugador jugador : jugadors) {
                 int id = jugador.getId();
@@ -200,6 +201,9 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         .uniqueResult();
 
                 long punts = poblats + 2 * ciutats + cartesPunt;
+                if (exercitMesGran != null && exercitMesGran.getId().equals(jugador.getId())) {
+                    punts += 2;
+                }
 
                 System.out.println(
                         "- " + jugador.getNom() + " (" + jugador.getColor() + ", torn " + jugador.getOrdreTorn() + ")");
@@ -253,7 +257,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             if (transaccioIniciada) {
                 handleException(session, e);
             }
-            return null;
+            throw e;
         }
     }
 
