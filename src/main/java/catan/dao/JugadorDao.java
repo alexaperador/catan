@@ -115,6 +115,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
     @Override
     public void comprarCarta(int idJugador) {
         Session session = sessionFactory.getCurrentSession();
+        Integer idPartida = null;
+        boolean puntVictoriaComprat = false;
         try {
             session.beginTransaction();
             Jugador jugador = session.get(Jugador.class, idJugador);
@@ -122,6 +124,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
             }
             Partida partida = jugador.getPartida();
+            idPartida = partida.getId();
             if (partida.getEstat() == EstatPartida.FINALITZADA) {
                 throw new IllegalStateException("La partida ja ha finalitzat");
             }
@@ -137,7 +140,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             if (partida.getLladrePendent()) {
                 throw new IllegalStateException("Has de moure el lladre abans de comprar una carta");
             }
-            
 
             RecursJugador recursDonaBlat = session
                     .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
@@ -180,6 +182,14 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("La pila de cartes de desenvolupament és buida");
             }
 
+            CartaDesenvolupament carta = pilaLliure.get(new Random().nextInt(pilaLliure.size()));
+            partida.getPila().remove(carta);
+            carta.setPila(null);
+            carta.setMa(jugador);
+            carta.setRondaCompra(partida.getRonda());
+            jugador.getCartesDesenvolupament().add(carta);
+            puntVictoriaComprat = carta.getTipusCarta() == TipusCarta.PUNT_VICTORIA;
+
             session.getTransaction().commit();
             System.out.println(jugador.getNom() + " ha comprat una carta de desenvolupament");
 
@@ -187,11 +197,17 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             handleException(session, e);
             throw e;
         }
+
+        if (puntVictoriaComprat) {
+            new PartidaDao().comprovarVictoria(idPartida);
+        }
     }
 
     @Override
     public void jugarCarta(int idJugador, int idCarta, TipusRecurs recurs) {
         Session session = sessionFactory.getCurrentSession();
+        Integer idPartida = null;
+        boolean cavallerJugat = false;
         try {
 
             session.beginTransaction();
@@ -201,6 +217,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
             }
             Partida partida = jugador.getPartida();
+            idPartida = partida.getId();
             if (partida.getEstat() == EstatPartida.FINALITZADA) {
                 throw new IllegalStateException("La partida ja ha finalitzat");
             }
@@ -220,11 +237,22 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             if (carta.isUsada()) {
                 throw new IllegalStateException("Aquesta carta ja ha estat usada");
             }
+            if (carta.getRondaCompra() == null || carta.getRondaCompra() >= partida.getRonda()) {
+                throw new IllegalStateException("No pots jugar una carta en la mateixa ronda que l'has comprada");
+            }
+            if (carta.getTipusCarta() == TipusCarta.PUNT_VICTORIA) {
+                throw new IllegalStateException("Les cartes de punt de victòria no es juguen");
+            }
             switch (carta.getTipusCarta()) {
                 case MONOPOLI:
                     if (recurs == null) {
                         throw new IllegalArgumentException("Cal indicar el recurs a monopolitzar");
                     }
+                    RecursJugador recursJugadorActiu = session
+                            .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
+                            .setParameter("idJugador", idJugador)
+                            .setParameter("tipus", recurs)
+                            .getSingleResult();
                     List<Jugador> TotsJugadors = partida.getJugadors();
                     for (Jugador j : TotsJugadors) {
                         if (!j.getId().equals(idJugador)) {
@@ -233,24 +261,23 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                                     .setParameter("idJugador", j.getId())
                                     .setParameter("tipus", recurs)
                                     .getSingleResult();
-                            int quantitat = recursJugador.getQuantitat() - 1;
-                            recursJugador.setQuantitat(quantitat < 0 ? 0 : quantitat);
-
-                            RecursJugador recursJugadorActiu = session
-                                    .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
-                                    .setParameter("idJugador", idJugador)
-                                    .setParameter("tipus", recurs)
-                                    .getSingleResult();
-                            recursJugadorActiu.setQuantitat(recursJugadorActiu.getQuantitat() + 1);
+                            int quantitat = recursJugador.getQuantitat();
+                            recursJugador.setQuantitat(0);
+                            recursJugadorActiu.setQuantitat(recursJugadorActiu.getQuantitat() + quantitat);
                         }
                     }
                     break;
                 case PUNT_VICTORIA:
-                    calcularPunts(idJugador);
-                    break;
+
+                    throw new IllegalStateException("Les cartes de punt de victòria no es juguen");
                 case CAVALLER:
+                    if (!jugador.potJugarCavaller()) {
+                        throw new IllegalStateException("Aquest jugador no pot jugar més cavallers");
+                    }
                     int cantitatCavallers = jugador.getCavallersJugats() + 1;
                     jugador.setCavallersJugats(cantitatCavallers);
+                    partida.setLladrePendent(true);
+                    cavallerJugat = true;
                     break;
                 default:
                     throw new IllegalStateException("Tipus de carta desconegut: " + carta.getTipusCarta());
@@ -261,6 +288,10 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         } catch (RuntimeException e) {
             handleException(session, e);
             throw e;
+        }
+
+        if (cavallerJugat) {
+            new PartidaDao().comprovarVictoria(idPartida);
         }
     }
 
@@ -640,9 +671,12 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
     @Override
     public int calcularPunts(int idJugador) {
         Session session = sessionFactory.getCurrentSession();
+        boolean transaccioIniciada = !session.getTransaction().isActive();
 
         try {
-            session.beginTransaction();
+            if (transaccioIniciada) {
+                session.beginTransaction();
+            }
 
             Jugador jugador = session.get(Jugador.class, idJugador);
 
@@ -684,12 +718,16 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 punts += 2;
             }
 
-            session.getTransaction().commit();
+            if (transaccioIniciada) {
+                session.getTransaction().commit();
+            }
 
             return punts;
 
         } catch (RuntimeException e) {
-            handleException(session, e);
+            if (transaccioIniciada) {
+                handleException(session, e);
+            }
             throw e;
         }
     }
@@ -743,14 +781,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             int ordreSeguent;
 
             if (preparacio) {
-                long poblats = session
-                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :idJugador", Long.class)
-                        .setParameter("idJugador", idJugador)
-                        .getSingleResult();
-                long carreteres = session
-                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :idJugador", Long.class)
-                        .setParameter("idJugador", idJugador)
-                        .getSingleResult();
+                long poblats = totalPoblats(idJugador, session);
+                long carreteres = totalCarreteres(idJugador, session);
 
                 if (poblats != partida.getRonda() || carreteres != partida.getRonda()) {
                     throw new IllegalStateException(
@@ -768,14 +800,16 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                     if (ordreActual > 1) {
                         ordreSeguent = ordreActual - 1;
                     } else {
-                        long totalPoblats = session.createQuery(
-                                "SELECT COUNT(p) FROM Poblat p WHERE p.propietari.partida.id = :idPartida",
-                                Long.class)
+                        long totalPoblats = session
+                                .createQuery(
+                                        "SELECT COUNT(p) FROM Poblat p WHERE p.propietari.partida.id = :idPartida",
+                                        Long.class)
                                 .setParameter("idPartida", partida.getId())
                                 .getSingleResult();
-                        long totalCarreteres = session.createQuery(
-                                "SELECT COUNT(c) FROM Carretera c WHERE c.propietari.partida.id = :idPartida",
-                                Long.class)
+                        long totalCarreteres = session
+                                .createQuery(
+                                        "SELECT COUNT(c) FROM Carretera c WHERE c.propietari.partida.id = :idPartida",
+                                        Long.class)
                                 .setParameter("idPartida", partida.getId())
                                 .getSingleResult();
 

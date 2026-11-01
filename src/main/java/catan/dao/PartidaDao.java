@@ -244,11 +244,15 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 }
             }
 
-            session.getTransaction().commit();
+            if (transaccioIniciada) {
+                session.getTransaction().commit();
+            }
             return guanyador;
 
         } catch (RuntimeException e) {
-            handleException(session, e);
+            if (transaccioIniciada) {
+                handleException(session, e);
+            }
             return null;
         }
     }
@@ -264,6 +268,23 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
 
             Partida partida = jugador.getPartida();
             boolean preparacio = partida.getEstat().equals(EstatPartida.PREPARACIO);
+
+            if (preparacio) {
+                long poblats = session
+                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :idJugador", Long.class)
+                        .setParameter("idJugador", idJugador)
+                        .getSingleResult();
+                long carreteres = session
+                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :idJugador", Long.class)
+                        .setParameter("idJugador", idJugador)
+                        .getSingleResult();
+                long construccionsEsperades = partida.getRonda() - 1L;
+
+                if (poblats != construccionsEsperades || carreteres != construccionsEsperades) {
+                    session.getTransaction().commit();
+                    return Collections.emptyList();
+                }
+            }
 
             String hql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
                     + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "

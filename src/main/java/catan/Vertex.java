@@ -9,12 +9,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 
 @Entity
-@Table(name = "Vertex")
+@Table(name = "Vertex", uniqueConstraints = @UniqueConstraint(columnNames = { "partida_id", "codi" }))
 public class Vertex {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

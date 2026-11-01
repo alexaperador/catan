@@ -38,9 +38,8 @@ public class CartaDesenvolupament {
     @JoinColumn(name = "ma", nullable = true)
     private Jugador ma;
 
-    @NotNull(message = "La pila és obligatòria")
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pila", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pila", nullable = true)
     private Partida pila;
 
     protected CartaDesenvolupament() {

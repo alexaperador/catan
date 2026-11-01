@@ -74,7 +74,9 @@ public class Jugador {
         this.partida = partida;
     }
 
-    
+    public boolean potJugarCavaller() {
+        return getCavallersJugats() < 3;
+    }
 
     public Integer getId() {
         return id;

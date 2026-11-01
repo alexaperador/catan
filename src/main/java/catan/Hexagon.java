@@ -20,12 +20,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "Hexagon")
+@Table(name = "Hexagon", uniqueConstraints = @UniqueConstraint(columnNames = { "partida_id", "codi" }))
 @NamedQuery(name = "Hexagon.perPartida", query = "FROM Hexagon h WHERE h.partida.id = :idPartida ORDER BY h.codi")
 public class Hexagon {
 
@@ -34,6 +35,7 @@ public class Hexagon {
     @Column(name = "id")
     private Integer id;
 
+    @NotNull(message = "El codi és obligatori")
     @Min(1)
     @Column(name = "codi", nullable = false)
     private Integer codi;
