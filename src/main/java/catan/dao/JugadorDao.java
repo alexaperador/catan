@@ -132,11 +132,12 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("No és el teu torn");
             }
             if (!partida.getDausTirats()) {
-                throw new IllegalStateException("Has de tirar els daus abans de comerciar");
+                throw new IllegalStateException("Has de tirar els daus abans de comprar una carta");
             }
             if (partida.getLladrePendent()) {
-                throw new IllegalStateException("Has de moure el lladre abans de comerciar");
+                throw new IllegalStateException("Has de moure el lladre abans de comprar una carta");
             }
+            
 
             RecursJugador recursDonaBlat = session
                     .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
@@ -170,8 +171,14 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             recursDonaLlana.setQuantitat(recursDonaLlana.getQuantitat() - 1);
             recursDonaMineral.setQuantitat(recursDonaMineral.getQuantitat() - 1);
 
-            CartaDesenvolupament carta = partida.getPila().remove(0);
-            jugador.getCartesDesenvolupament().add(carta);
+            List<CartaDesenvolupament> pilaLliure = session
+                    .createQuery("FROM CartaDesenvolupament c WHERE c.pila.id = :idPartida AND c.ma IS NULL",
+                            CartaDesenvolupament.class)
+                    .setParameter("idPartida", partida.getId())
+                    .getResultList();
+            if (pilaLliure.isEmpty()) {
+                throw new IllegalStateException("La pila de cartes de desenvolupament és buida");
+            }
 
             session.getTransaction().commit();
             System.out.println(jugador.getNom() + " ha comprat una carta de desenvolupament");
@@ -304,10 +311,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("L'aresta ja està ocupada");
             }
 
-            long carreteres = session
-                    .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
-                    .setParameter("id", idJugador)
-                    .uniqueResult();
+            long carreteres = totalCarreteres(idJugador, session);
             if (carreteres >= 15) {
                 throw new IllegalStateException("Has assolit el límit de 15 carreteres");
             }
@@ -316,10 +320,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             int vertexB = aresta.getVertexB().getId();
 
             if (preparacio) {
-                long poblats = session
-                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
-                        .setParameter("id", idJugador)
-                        .uniqueResult();
+                long poblats = totalPoblats(idJugador, session);
                 if (poblats != partida.getRonda()) {
                     throw new IllegalStateException("Primer has de col·locar el poblat d'aquest torn");
                 }
@@ -454,19 +455,13 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("Regla de la distància: hi ha una construcció en un vèrtex adjacent");
             }
 
-            long poblats = session
-                    .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
-                    .setParameter("id", idJugador)
-                    .uniqueResult();
+            long poblats = totalPoblats(idJugador, session);
             if (poblats >= 5) {
                 throw new IllegalStateException("Has assolit el límit de 5 poblats");
             }
 
             if (preparacio) {
-                long carreteres = session
-                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
-                        .setParameter("id", idJugador)
-                        .uniqueResult();
+                long carreteres = totalCarreteres(idJugador, session);
                 if (poblats != partida.getRonda() - 1) {
                     throw new IllegalStateException("Ja has col·locat el poblat d'aquest torn");
                 }
@@ -697,6 +692,18 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             handleException(session, e);
             throw e;
         }
+    }
+
+    private long totalPoblats(int idJugador, Session session) {
+        return session
+                .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
+                .setParameter("id", idJugador).uniqueResult();
+    }
+
+    private long totalCarreteres(int idJugador, Session session) {
+        return session
+                .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :id", Long.class)
+                .setParameter("id", idJugador).uniqueResult();
     }
 
     @Override
