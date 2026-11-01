@@ -55,6 +55,7 @@ public class Hexagon {
     @Column(name = "r", nullable = false)
     private int r;
 
+    @NotNull(message = "La partida és obligatòria")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;

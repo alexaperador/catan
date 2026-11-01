@@ -12,6 +12,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "HexagonVertex")
@@ -26,10 +27,12 @@ public class HexagonVertex {
     @Column(name = "id")
     private Integer id;
 
+    @NotNull(message = "El hexàgon és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "hexagon_id", nullable = false)
     private Hexagon hexagon;
 
+    @NotNull(message = "El vertex és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "vertex_id", nullable = false)
     private Vertex vertex;

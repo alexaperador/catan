@@ -15,6 +15,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "recursos_jugador", uniqueConstraints = @UniqueConstraint(columnNames = { "jugador_id", "tipus" }))
@@ -26,6 +27,7 @@ public class RecursJugador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotNull(message = "El tipus de recurs és obligatori")
     @Enumerated(EnumType.STRING)
     @Column(name = "tipus", nullable = false, length = 20)
     private TipusRecurs tipusRecurs;
@@ -34,6 +36,7 @@ public class RecursJugador {
     @Column(name = "quantitat", nullable = false)
     private int quantitat;
 
+    @NotNull(message = "El jugador és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_id", nullable = false)
     private Jugador jugador;

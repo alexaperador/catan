@@ -312,8 +312,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 throw new IllegalStateException("Has assolit el límit de 15 carreteres");
             }
 
-            int vA = aresta.getVertexA().getId();
-            int vB = aresta.getVertexB().getId();
+            int vertexA = aresta.getVertexA().getId();
+            int vertexB = aresta.getVertexB().getId();
 
             if (preparacio) {
                 long poblats = session
@@ -336,8 +336,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                                 + "    AND (c.aresta.vertexA = p.vertex OR c.aresta.vertexB = p.vertex))",
                         Long.class)
                         .setParameter("id", idJugador)
-                        .setParameter("vA", vA)
-                        .setParameter("vB", vB)
+                        .setParameter("vA", vertexA)
+                        .setParameter("vB", vertexB)
                         .uniqueResult();
                 if (poblatsLliures == 0) {
                     throw new IllegalStateException("La carretera ha de tocar el poblat que acabes de col·locar");
@@ -348,8 +348,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                                 + "WHERE a.propietari.id = :id AND (a.vertex.id = :vA OR a.vertex.id = :vB)",
                         Long.class)
                         .setParameter("id", idJugador)
-                        .setParameter("vA", vA)
-                        .setParameter("vB", vB)
+                        .setParameter("vA", vertexA)
+                        .setParameter("vB", vertexB)
                         .uniqueResult();
                 long carreteresVeines = session.createQuery(
                         "SELECT COUNT(c) FROM Carretera c "
@@ -358,8 +358,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                                 + "  OR c.aresta.vertexB.id = :vA OR c.aresta.vertexB.id = :vB)",
                         Long.class)
                         .setParameter("id", idJugador)
-                        .setParameter("vA", vA)
-                        .setParameter("vB", vB)
+                        .setParameter("vA", vertexA)
+                        .setParameter("vB", vertexB)
                         .uniqueResult();
                 if (assentaments == 0 && carreteresVeines == 0) {
                     throw new IllegalStateException("L'aresta no està connectada a cap construcció teva");
@@ -512,8 +512,8 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                                 Hexagon.class)
                         .setParameter("idVertex", idVertex)
                         .getResultList();
-                for (Hexagon h : hexagons) {
-                    TipusRecurs recurs = recursDelTerreny(h.getTerreny());
+                for (Hexagon hexagon : hexagons) {
+                    TipusRecurs recurs = recursDelTerreny(hexagon.getTerreny());
                     if (recurs == null) {
                         continue;
                     }
@@ -722,6 +722,84 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             }
 
             boolean preparacio = partida.getEstat() == EstatPartida.PREPARACIO;
+
+            if (!preparacio && partida.getEstat() != EstatPartida.EN_CURS) {
+                throw new IllegalStateException("La partida no està en curs");
+            }
+
+            if (!preparacio && !partida.getDausTirats()) {
+                throw new IllegalStateException("Has de tirar els daus abans de passar el torn");
+            }
+
+            int ordreActual = jugador.getOrdreTorn();
+            int nombreJugadors = partida.getJugadors().size();
+            int ordreSeguent;
+
+            if (preparacio) {
+                long poblats = session
+                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :idJugador", Long.class)
+                        .setParameter("idJugador", idJugador)
+                        .getSingleResult();
+                long carreteres = session
+                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :idJugador", Long.class)
+                        .setParameter("idJugador", idJugador)
+                        .getSingleResult();
+
+                if (poblats != partida.getRonda() || carreteres != partida.getRonda()) {
+                    throw new IllegalStateException(
+                            "Has de col·locar un poblat i una carretera abans de passar el torn");
+                }
+
+                if (partida.getRonda() == 1) {
+                    if (ordreActual < nombreJugadors) {
+                        ordreSeguent = ordreActual + 1;
+                    } else {
+                        partida.setRonda(2);
+                        ordreSeguent = ordreActual;
+                    }
+                } else {
+                    if (ordreActual > 1) {
+                        ordreSeguent = ordreActual - 1;
+                    } else {
+                        long totalPoblats = session.createQuery(
+                                "SELECT COUNT(p) FROM Poblat p WHERE p.propietari.partida.id = :idPartida",
+                                Long.class)
+                                .setParameter("idPartida", partida.getId())
+                                .getSingleResult();
+                        long totalCarreteres = session.createQuery(
+                                "SELECT COUNT(c) FROM Carretera c WHERE c.propietari.partida.id = :idPartida",
+                                Long.class)
+                                .setParameter("idPartida", partida.getId())
+                                .getSingleResult();
+
+                        if (totalPoblats != nombreJugadors * 2L || totalCarreteres != nombreJugadors * 2L) {
+                            throw new IllegalStateException(
+                                    "Tots els jugadors han de tenir 2 poblats i 2 carreteres");
+                        }
+
+                        partida.setEstat(EstatPartida.EN_CURS);
+                        partida.setRonda(1);
+                        ordreSeguent = 1;
+                    }
+                }
+            } else {
+                ordreSeguent = ordreActual == nombreJugadors ? 1 : ordreActual + 1;
+                if (ordreSeguent == 1) {
+                    partida.setRonda(partida.getRonda() + 1);
+                }
+            }
+
+            Jugador jugadorSeguent = session.createQuery(
+                    "FROM Jugador j WHERE j.partida.id = :idPartida AND j.ordreTorn = :ordreTorn",
+                    Jugador.class)
+                    .setParameter("idPartida", partida.getId())
+                    .setParameter("ordreTorn", ordreSeguent)
+                    .getSingleResult();
+            partida.setActiu(jugadorSeguent);
+            partida.setDausTirats(false);
+
+            session.getTransaction().commit();
+            System.out.println("Torn passat. Ara és el torn de " + jugadorSeguent.getNom());
 
         } catch (RuntimeException e) {
             handleException(session, e);

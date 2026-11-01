@@ -20,7 +20,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -33,7 +32,6 @@ public class Jugador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "El nom és obligatori")
     @Size(max = 50, message = "El nom no pot superar els {max} caràcters")
     @Column(name = "nom", nullable = false, length = 50)
     private String nom;
@@ -52,6 +50,7 @@ public class Jugador {
     @Column(name = "cavallers_jugats", nullable = false)
     private int cavallersJugats;
 
+    @NotNull(message = "La partida és obligatòria")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;

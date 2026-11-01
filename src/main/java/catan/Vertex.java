@@ -20,12 +20,12 @@ public class Vertex {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotNull(message = "La partida és obligatòria")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;
 
     @Min(1)
-    @NotNull(message = "El codi és obligatori")
     @Column(name = "codi", nullable = false)
     private int codi;
 
