@@ -56,27 +56,9 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         try {
             session.beginTransaction();
 
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
+            Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
-
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
-            if (!partida.getDausTirats()) {
-                throw new IllegalStateException("Has de tirar els daus abans de comerciar");
-            }
-            if (partida.getLladrePendent()) {
-                throw new IllegalStateException("Has de moure el lladre abans de comerciar");
-            }
+            validarTornEnCurs(partida, idJugador, true, true, "comerciar");
 
             if (dona == null || rep == null) {
                 throw new IllegalArgumentException("Cal indicar el recurs que dónes i el que reps");
@@ -119,27 +101,10 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         boolean puntVictoriaComprat = false;
         try {
             session.beginTransaction();
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
+            Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
             idPartida = partida.getId();
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
-            if (!partida.getDausTirats()) {
-                throw new IllegalStateException("Has de tirar els daus abans de comprar una carta");
-            }
-            if (partida.getLladrePendent()) {
-                throw new IllegalStateException("Has de moure el lladre abans de comprar una carta");
-            }
+            validarTornEnCurs(partida, idJugador, true, true, "comprar una carta");
 
             RecursJugador recursDonaBlat = session
                     .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
@@ -209,24 +174,12 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         Integer idPartida = null;
         boolean cavallerJugat = false;
         try {
-
             session.beginTransaction();
 
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
+            Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
             idPartida = partida.getId();
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
+            validarTornEnCurs(partida, idJugador, true, false, "jugar una carta");
             CartaDesenvolupament carta = session.get(CartaDesenvolupament.class, idCarta);
             if (carta == null) {
                 throw new IllegalArgumentException("carta no encontrada");
@@ -299,21 +252,9 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         try {
             session.beginTransaction();
 
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
+            Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
-
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS && partida.getEstat() != EstatPartida.PREPARACIO) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
+            validarTorn(partida, idJugador, true, false, false, "construir");
             boolean preparacio = partida.getEstat() == EstatPartida.PREPARACIO;
             if (!preparacio) {
                 if (!partida.getDausTirats()) {
@@ -431,22 +372,11 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         try {
             session.beginTransaction();
 
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
+            Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
             idPartida = partida.getId();
 
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS && partida.getEstat() != EstatPartida.PREPARACIO) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
+            validarTorn(partida, idJugador, true, false, false, "construir");
             boolean preparacio = partida.getEstat() == EstatPartida.PREPARACIO;
             if (!preparacio) {
                 if (!partida.getDausTirats()) {
@@ -583,28 +513,10 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         try {
             session.beginTransaction();
 
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
+            Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
             idPartida = partida.getId();
-
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-            if (partida.getEstat() != EstatPartida.EN_CURS) {
-                throw new IllegalStateException("La partida no està en curs");
-            }
-            if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
-                throw new IllegalStateException("No és el teu torn");
-            }
-            if (!partida.getDausTirats()) {
-                throw new IllegalStateException("Has de tirar els daus abans de construir");
-            }
-            if (partida.getLladrePendent()) {
-                throw new IllegalStateException("Has de moure el lladre abans de construir");
-            }
+            validarTornEnCurs(partida, idJugador, true, true, "construir");
 
             Vertex vertex = session.get(Vertex.class, idVertex);
             if (vertex == null) {
@@ -733,6 +645,40 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         return session
                 .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
                 .setParameter("id", idJugador).uniqueResult();
+    }
+
+    private Jugador obtenirJugador(Session session, int idJugador) {
+        Jugador jugador = session.get(Jugador.class, idJugador);
+        if (jugador == null) {
+            throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
+        }
+        return jugador;
+    }
+
+    private void validarTornEnCurs(Partida partida, int idJugador, boolean requereixDaus,
+            boolean requereixLladreMogut, String accio) {
+        validarTorn(partida, idJugador, false, requereixDaus, requereixLladreMogut, accio);
+    }
+
+    private void validarTorn(Partida partida, int idJugador, boolean permetPreparacio, boolean requereixDaus,
+            boolean requereixLladreMogut, String accio) {
+        if (partida.getEstat() == EstatPartida.FINALITZADA) {
+            throw new IllegalStateException("La partida ja ha finalitzat");
+        }
+        if ((!permetPreparacio && partida.getEstat() != EstatPartida.EN_CURS)
+                || (permetPreparacio && partida.getEstat() != EstatPartida.EN_CURS
+                        && partida.getEstat() != EstatPartida.PREPARACIO)) {
+            throw new IllegalStateException("La partida no està en curs");
+        }
+        if (partida.getActiu() == null || !partida.getActiu().getId().equals(idJugador)) {
+            throw new IllegalStateException("No és el teu torn");
+        }
+        if (requereixDaus && !partida.getDausTirats()) {
+            throw new IllegalStateException("Has de tirar els daus abans de " + accio);
+        }
+        if (requereixLladreMogut && partida.getLladrePendent()) {
+            throw new IllegalStateException("Has de moure el lladre abans de " + accio);
+        }
     }
 
     private long totalCarreteres(int idJugador, Session session) {

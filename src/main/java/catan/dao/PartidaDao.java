@@ -78,14 +78,19 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         }
     }
 
+    private Partida obtenirPartida(Session session, int idPartida) {
+        Partida partida = session.get(Partida.class, idPartida);
+        if (partida == null) {
+            throw new IllegalArgumentException("No existeix la partida: " + idPartida);
+        }
+        return partida;
+    }
+
     public void mostrarTauler(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            Partida partida = session.get(Partida.class, idPartida);
-            if (partida == null) {
-                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
-            }
+            Partida partida = obtenirPartida(session, idPartida);
 
             List<Hexagon> hexagons = session
                     .createNamedQuery("Hexagon.perPartida", Hexagon.class)
@@ -159,10 +164,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            Partida partida = session.get(Partida.class, idPartida);
-            if (partida == null) {
-                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
-            }
+            Partida partida = obtenirPartida(session, idPartida);
 
             String actiu = (partida.getActiu() != null) ? partida.getActiu().getNom() : "cap";
             String tirada = (partida.getUltimaTirada() != null) ? String.valueOf(partida.getUltimaTirada()) : "cap";
@@ -226,10 +228,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             if (transaccioIniciada) {
                 session.beginTransaction();
             }
-            Partida partida = session.get(Partida.class, idPartida);
-            if (partida == null) {
-                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
-            }
+            obtenirPartida(session, idPartida);
 
             List<Jugador> top = session
                     .createQuery("FROM Jugador j WHERE j.partida.id = :idPartida "
@@ -290,21 +289,21 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 }
             }
 
-            String hql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
+            String sql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
                     + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "
                     + "AND NOT EXISTS (SELECT 1 FROM Aresta ar, Assentament a2 "
                     + "    WHERE (ar.vertexA = v AND a2.vertex = ar.vertexB) "
                     + "    OR (ar.vertexB = v AND a2.vertex = ar.vertexA)) ";
 
             if (!preparacio) {
-                hql += "AND EXISTS (SELECT 1 FROM Carretera c "
+                sql += "AND EXISTS (SELECT 1 FROM Carretera c "
                         + "    WHERE c.propietari.id = :idJugador "
                         + "      AND (c.aresta.vertexA = v OR c.aresta.vertexB = v)) ";
             }
 
-            hql += "ORDER BY v.codi";
+            sql += "ORDER BY v.codi";
 
-            var query = session.createQuery(hql, Vertex.class)
+            var query = session.createQuery(sql, Vertex.class)
                     .setParameter("idPartida", partida.getId());
             if (!preparacio) {
                 query.setParameter("idJugador", idJugador);
@@ -325,10 +324,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         try {
             session.beginTransaction();
 
-            Partida partida = session.get(Partida.class, idPartida);
-            if (partida == null) {
-                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
-            }
+            Partida partida = obtenirPartida(session, idPartida);
             if (partida.getEstat() == EstatPartida.FINALITZADA) {
                 throw new IllegalStateException("La partida ja ha finalitzat");
             }
@@ -453,11 +449,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         try {
             session.beginTransaction();
 
-            Partida partida = session.get(Partida.class, idPartida);
-
-            if (partida == null) {
-                throw new IllegalArgumentException("No existeix la partida: " + idPartida);
-            }
+            Partida partida = obtenirPartida(session, idPartida);
 
             if (partida.getEstat() == EstatPartida.FINALITZADA) {
                 session.getTransaction().commit();
