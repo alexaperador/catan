@@ -175,6 +175,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                     .createNamedQuery("Jugador.perPartida", Jugador.class)
                     .setParameter("idPartida", idPartida)
                     .getResultList();
+            Jugador exercitMesGran = exercitMesGran(idPartida);
 
             for (Jugador jugador : jugadors) {
                 int id = jugador.getId();
@@ -200,6 +201,9 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                         .uniqueResult();
 
                 long punts = poblats + 2 * ciutats + cartesPunt;
+                if (exercitMesGran != null && exercitMesGran.getId().equals(jugador.getId())) {
+                    punts += 2;
+                }
 
                 System.out.println(
                         "- " + jugador.getNom() + " (" + jugador.getColor() + ", torn " + jugador.getOrdreTorn() + ")");
@@ -244,12 +248,16 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 }
             }
 
-            session.getTransaction().commit();
+            if (transaccioIniciada) {
+                session.getTransaction().commit();
+            }
             return guanyador;
 
         } catch (RuntimeException e) {
-            handleException(session, e);
-            return null;
+            if (transaccioIniciada) {
+                handleException(session, e);
+            }
+            throw e;
         }
     }
 
@@ -264,6 +272,23 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
 
             Partida partida = jugador.getPartida();
             boolean preparacio = partida.getEstat().equals(EstatPartida.PREPARACIO);
+
+            if (preparacio) {
+                long poblats = session
+                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :idJugador", Long.class)
+                        .setParameter("idJugador", idJugador)
+                        .getSingleResult();
+                long carreteres = session
+                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :idJugador", Long.class)
+                        .setParameter("idJugador", idJugador)
+                        .getSingleResult();
+                long construccionsEsperades = partida.getRonda() - 1L;
+
+                if (poblats != construccionsEsperades || carreteres != construccionsEsperades) {
+                    session.getTransaction().commit();
+                    return Collections.emptyList();
+                }
+            }
 
             String hql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
                     + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "
@@ -399,8 +424,12 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 .createNamedQuery("RecursJugador.perJugador", RecursJugador.class)
                 .setParameter("idJugador", jugador.getId())
                 .getResultList();
+        int total = 0;
 
-        int total = inventari.stream().mapToInt(RecursJugador::getQuantitat).sum();
+        for (RecursJugador rj : inventari) {
+            total += rj.getQuantitat();
+        }
+
         if (total <= 7) {
             return;
         }
@@ -420,78 +449,48 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
     @Override
     public void comprovarVictoria(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
+
         try {
             session.beginTransaction();
 
             Partida partida = session.get(Partida.class, idPartida);
+
             if (partida == null) {
                 throw new IllegalArgumentException("No existeix la partida: " + idPartida);
             }
-            if (partida.getEstat() != EstatPartida.EN_CURS) {
+
+            if (partida.getEstat() == EstatPartida.FINALITZADA) {
                 session.getTransaction().commit();
                 return;
             }
 
-            Jugador exercit = jugadorExercitMesGran(session, idPartida);
+            List<Jugador> jugadors = session.createQuery(
+                    "SELECT j FROM Jugador j " +
+                            "WHERE j.partida.id = :idPartida",
+                    Jugador.class)
+                    .setParameter("idPartida", idPartida)
+                    .getResultList();
 
-            Jugador guanyador = null;
-            int milloresPunts = 0;
-            for (Jugador j : partida.getJugadors()) {
-                int punts = calcularPunts(session, j, exercit);
-                if (punts >= partida.getPuntsPerGuanyar() && punts > milloresPunts) {
-                    guanyador = j;
-                    milloresPunts = punts;
+            JugadorDao jugadorDao = new JugadorDao();
+
+            for (Jugador jugador : jugadors) {
+                int punts = jugadorDao.calcularPunts(jugador.getId());
+
+                if (punts >= partida.getPuntsPerGuanyar()) {
+                    partida.setGuanyador(jugador);
+                    partida.setEstat(EstatPartida.FINALITZADA);
+
+                    session.merge(partida);
+
+                    break;
                 }
             }
 
-            if (guanyador != null) {
-                partida.setEstat(EstatPartida.FINALITZADA);
-                partida.setGuanyador(guanyador);
-                System.out.println(guanyador.getNom() + " ha guanyat amb " + milloresPunts + " punts!");
-            }
-
             session.getTransaction().commit();
+
         } catch (RuntimeException e) {
             handleException(session, e);
             throw e;
         }
-    }
-
-    private int calcularPunts(Session session, Jugador jugador, Jugador exercitMesGran) {
-        int id = jugador.getId();
-        long poblats = session
-                .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :id", Long.class)
-                .setParameter("id", id).uniqueResult();
-        long ciutats = session
-                .createQuery("SELECT COUNT(c) FROM Ciutat c WHERE c.propietari.id = :id", Long.class)
-                .setParameter("id", id).uniqueResult();
-        long cartesPunt = session.createQuery(
-                "SELECT COUNT(c) FROM CartaDesenvolupament c WHERE c.ma.id = :id AND c.tipusCarta = :tipus",
-                Long.class)
-                .setParameter("id", id)
-                .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
-                .uniqueResult();
-
-        int punts = (int) (poblats + 2 * ciutats + cartesPunt);
-        if (exercitMesGran != null && exercitMesGran.getId().equals(id)) {
-            punts += 2;
-        }
-        return punts;
-    }
-
-    private Jugador jugadorExercitMesGran(Session session, int idPartida) {
-        List<Jugador> top = session
-                .createQuery("FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.cavallersJugats DESC",
-                        Jugador.class)
-                .setParameter("idPartida", idPartida)
-                .setMaxResults(2)
-                .getResultList();
-        if (top.isEmpty() || top.get(0).getCavallersJugats() < 3) {
-            return null;
-        }
-        if (top.size() > 1 && top.get(1).getCavallersJugats() == top.get(0).getCavallersJugats()) {
-            return null;
-        }
-        return top.get(0);
     }
 }

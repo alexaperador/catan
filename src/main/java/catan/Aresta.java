@@ -9,24 +9,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "Aresta")
+@Table(name = "Aresta", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "partida_id", "codi" }),
+        @UniqueConstraint(columnNames = { "partida_id", "vertex_a_id", "vertex_b_id" })
+})
 public class Aresta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotNull(message = "La partida és obligatòria")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;
 
+    @NotNull(message = "El vertex A és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "vertex_a_id", nullable = false)
     private Vertex vertexA;
 
+    @NotNull(message = "El vertex B és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "vertex_b_id", nullable = false)
     private Vertex vertexB;

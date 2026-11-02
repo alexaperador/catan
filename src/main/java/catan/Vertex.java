@@ -9,23 +9,24 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 
 @Entity
-@Table(name = "Vertex")
+@Table(name = "Vertex", uniqueConstraints = @UniqueConstraint(columnNames = { "partida_id", "codi" }))
 public class Vertex {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotNull(message = "La partida és obligatòria")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;
 
     @Min(1)
-    @NotNull(message = "El codi és obligatori")
     @Column(name = "codi", nullable = false)
     private int codi;
 

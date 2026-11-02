@@ -20,20 +20,18 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "jugadors")
-@NamedQuery(name = "Jugador.perPartida",
-        query = "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn")
+@NamedQuery(name = "Jugador.perPartida", query = "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn")
 public class Jugador {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "El nom és obligatori")
+    @NotNull(message = "El nom és obligatori")
     @Size(max = 50, message = "El nom no pot superar els {max} caràcters")
     @Column(name = "nom", nullable = false, length = 50)
     private String nom;
@@ -52,6 +50,7 @@ public class Jugador {
     @Column(name = "cavallers_jugats", nullable = false)
     private int cavallersJugats;
 
+    @NotNull(message = "La partida és obligatòria")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;
@@ -62,7 +61,7 @@ public class Jugador {
     @OneToMany(mappedBy = "ma", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartaDesenvolupament> cartesDesenvolupament = new ArrayList<>();
 
-    @OneToMany (mappedBy = "propietari", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "propietari", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Construccio> construccions = new ArrayList<>();
 
     protected Jugador() {
@@ -74,8 +73,6 @@ public class Jugador {
         this.ordreTorn = ordreTorn;
         this.partida = partida;
     }
-
-    
 
     public Integer getId() {
         return id;

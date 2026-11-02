@@ -10,12 +10,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "HexagonVertex")
-@NamedQuery (name = "HexagonVertex.assentamentsPerPartida", query = "SELECT hv.hexagon.id, a "
+@Table(name = "HexagonVertex", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "hexagon_id", "vertex_id" }),
+        @UniqueConstraint(columnNames = { "hexagon_id", "posicio" })
+})
+@NamedQuery(name = "HexagonVertex.assentamentsPerPartida", query = "SELECT hv.hexagon.id, a "
         + "FROM HexagonVertex hv, Assentament a "
         + "WHERE a.vertex = hv.vertex AND hv.hexagon.partida.id = :idPartida "
         + "ORDER BY hv.hexagon.codi, hv.posicio")
@@ -26,10 +31,12 @@ public class HexagonVertex {
     @Column(name = "id")
     private Integer id;
 
+    @NotNull(message = "El hexàgon és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "hexagon_id", nullable = false)
     private Hexagon hexagon;
 
+    @NotNull(message = "El vertex és obligatori")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "vertex_id", nullable = false)
     private Vertex vertex;
