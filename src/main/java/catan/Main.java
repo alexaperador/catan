@@ -85,6 +85,10 @@ public class Main {
             jugadorDao.passarTorn(jugadorActiu.getId());
             partidaDao.mostrarPartida(idPartida);
 
+            // Prova casos invalids i comprova que les operacions rebutjades no modifiquen dades.
+            System.out.println("\n=== EXEMPLE 8: proves de validacio i casos limit ===");
+            provarValidacions(jugadorDao, partidaDao, idPartida);
+
         } catch (Exception e) {
             System.err.println("Error en la prova: " + e.getMessage());
         } finally {
@@ -247,6 +251,74 @@ public class Main {
                 jugadorDao.passarTorn(jugador.getId());
             }
         }
+    }
+
+    private static int totalRecursos(int idJugador) {
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            Long total = session.createQuery(
+                    "SELECT COALESCE(SUM(r.quantitat), 0) FROM RecursJugador r WHERE r.jugador.id = :id",
+                    Long.class)
+                    .setParameter("id", idJugador)
+                    .getSingleResult();
+            return total.intValue();
+        }
+    }
+
+    private static Jugador obtenirJugadorActiu(int idPartida) {
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "SELECT p.actiu FROM Partida p WHERE p.id = :idPartida", Jugador.class)
+                    .setParameter("idPartida", idPartida)
+                    .getSingleResult();
+        }
+    }
+
+
+        private static void provarValidacions(JugadorDao jugadorDao, PartidaDao partidaDao,
+            int idPartida) {
+        // Després de passar el torn, el jugador anterior ja no és l'actiu.
+        Jugador actiuActual = obtenirJugadorActiu(idPartida);
+
+        esperarExcepcio("jugador inexistent", () -> jugadorDao.mostrarRecursos(-1));
+
+        int recursosAbans = totalRecursos(actiuActual.getId());
+        esperarExcepcio("compra sense daus", () -> jugadorDao.comprarCarta(actiuActual.getId()));
+        int recursosDespres = totalRecursos(actiuActual.getId());
+        comprovar(recursosAbans == recursosDespres,
+                "una compra rebutjada no ha consumit recursos");
+
+        // A partir d'aquí ja es poden provar les regles que exigeixen una tirada.
+        partidaDao.tirarDaus(idPartida);
+        if (lladrePendent(idPartida)) {
+            jugadorDao.moureLladre(actiuActual.getId(), obtenirHexagonAlternatiu(idPartida), null);
+        }
+        
+
+        esperarExcepcio("intercanvi del mateix recurs", () ->
+            jugadorDao.comerciarBanca(actiuActual.getId(), TipusRecurs.FUSTA, TipusRecurs.FUSTA));
+        esperarExcepcio("arista inexistent",
+            () -> jugadorDao.construirCarretera(actiuActual.getId(), -1));
+        esperarExcepcio("moure lladre sense moviment pendent",
+            () -> jugadorDao.moureLladre(actiuActual.getId(), -1, null));
+        esperarExcepcio("tirar els daus dues vegades en el mateix torn",
+            () -> partidaDao.tirarDaus(idPartida));
+
+        comprovar(partidaDao.vertexsDisponibles(-1).isEmpty(),
+                "vertexsDisponibles retorna buit per a un jugador inexistent");
+        Jugador exercit = partidaDao.exercitMesGran(idPartida);
+        comprovar(exercit == null || exercit.getPartida().getId().equals(idPartida),
+                "exercitMesGran manté la partida correcta després de les proves");
+    }
+
+    private static void esperarExcepcio(String prova, Runnable operacio) {
+        boolean rebutjada = false;
+        try {
+            operacio.run();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            rebutjada = true;
+            System.out.println("[OK] " + prova + " rebutjat: " + e.getMessage());
+        }
+        comprovar(rebutjada, prova + " hauria de ser rebutjat");
     }
 
     private static int obtenirArestaDelVertex(int idVertex) {
