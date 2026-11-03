@@ -17,35 +17,72 @@ public class Main {
         JugadorDao jugadorDao = new JugadorDao();
 
         try {
+            // Crea una partida, comprova jugadors i cartes inicials.
             System.out.println("\n=== EXEMPLE 1: iniciar una partida ===");
             List<String> nomsJugadors = java.util.Arrays.asList("Alice", "Bob", "Charlie");
             int idPartida = partidaDao.iniciarPartida(nomsJugadors);
             System.out.println("\t Partida iniciada amb ID: " + idPartida);
             comprovarIniciPartida(idPartida, nomsJugadors.size());
 
+            // Mostra el tauler carregat des de la base de dades.
             System.out.println("\n=== EXEMPLE 2: consultar el tauler ===");
             partidaDao.mostrarTauler(idPartida);
             System.out.println("[OK] mostrarTauler ha consultat el tauler");
 
             List<Jugador> jugadors = obtenirJugadors(idPartida);
 
+            // Completa les dues rondes de preparació del joc.
             System.out.println("\n=== EXEMPLE 3: preparar la partida ===");
             prepararPartida(jugadorDao, jugadors);
 
+            // Tira els daus i comprova el repartiment de recursos.
             System.out.println("\n=== EXEMPLE 4: tirar els daus i consultar la partida ===");
-                Map<Integer, Map<TipusRecurs, Integer>> recursosRepartits = partidaDao.tirarDaus(idPartida);
-                comprovar(recursosRepartits.size() == jugadors.size(),
+            Map<Integer, Map<TipusRecurs, Integer>> recursosRepartits = partidaDao.tirarDaus(idPartida);
+            comprovar(recursosRepartits.size() == jugadors.size(),
                     "tirarDaus ha retornat informació de tots els jugadors");
             partidaDao.mostrarPartida(idPartida);
-                System.out.println("[OK] mostrarPartida ha consultat l'estat de la partida");
+            System.out.println("[OK] mostrarPartida ha consultat l'estat de la partida");
 
-            System.out.println("\n=== EXEMPLE 5: consultar els recursos ===");
+            Jugador jugadorActiu = jugadors.get(0);
+            if (lladrePendent(idPartida)) {
+                jugadorDao.moureLladre(jugadorActiu.getId(), obtenirHexagonAlternatiu(idPartida), null);
+                System.out.println("[OK] moureLladre ha mogut el lladre després d'un 7");
+            }
+
+            // Executa les accions principals del jugador.
+            System.out.println("\n=== EXEMPLE 5: operacions del jugador actiu ===");
+            prepararRecursosPerProva(jugadorActiu.getId());
+            jugadorDao.mostrarRecursos(jugadorActiu.getId());
+            jugadorDao.comerciarBanca(jugadorActiu.getId(), TipusRecurs.FUSTA, TipusRecurs.MAO);
+            System.out.println("[OK] comerciarBanca ha canviat recursos");
+            jugadorDao.comprarCarta(jugadorActiu.getId());
+            System.out.println("[OK] comprarCarta ha comprat una carta");
+            CartaDesenvolupament cartaJugable = prepararCartaPerJugar(jugadorActiu.getId(), idPartida);
+            jugadorDao.jugarCarta(jugadorActiu.getId(), cartaJugable.getId(), TipusRecurs.FUSTA);
+            System.out.println("[OK] jugarCarta ha jugat una carta de monopoli");
+
+            int punts = jugadorDao.calcularPunts(jugadorActiu.getId());
+            comprovar(punts >= 0, "calcularPunts ha retornat " + punts + " punts");
+
+            int idVertexPoblat = obtenirVertexPoblat(jugadorActiu.getId());
+            jugadorDao.millorarACiutat(jugadorActiu.getId(), idVertexPoblat);
+            System.out.println("[OK] millorarACiutat ha convertit un poblat en ciutat");
+
+            Jugador exercitMesGran = partidaDao.exercitMesGran(idPartida);
+            comprovar(exercitMesGran == null || exercitMesGran.getPartida().getId().equals(idPartida),
+                    "exercitMesGran ha consultat la partida correcta");
+            partidaDao.comprovarVictoria(idPartida);
+            System.out.println("[OK] comprovarVictoria ha revisat la partida");
+
+            // Mostra els recursos finals de tots els jugadors.
+            System.out.println("\n=== EXEMPLE 6: consultar els recursos ===");
             for (Jugador jugador : jugadors) {
                 partidaDao.mostrarRecursos(jugador.getId());
             }
 
-            System.out.println("\n=== EXEMPLE 6: passar el torn ===");
-            jugadorDao.passarTorn(jugadors.get(0).getId());
+            // Passa el torn i comprova el nou estat de la partida.
+            System.out.println("\n=== EXEMPLE 7: passar el torn ===");
+            jugadorDao.passarTorn(jugadorActiu.getId());
             partidaDao.mostrarPartida(idPartida);
 
         } catch (Exception e) {
@@ -53,10 +90,10 @@ public class Main {
         } finally {
             SessionManager.tancar();
         }
-
     }
 
     private static void comprovarIniciPartida(int idPartida, int jugadorsEsperats) {
+        // Comprova que la partida, els jugadors i les cartes s'han persistit.
         comprovar(idPartida > 0, "iniciarPartida ha retornat un ID vàlid");
 
         List<Jugador> jugadors = obtenirJugadors(idPartida);
@@ -99,7 +136,90 @@ public class Main {
         System.out.println("[OK] " + missatge);
     }
 
+    private static void prepararRecursosPerProva(int idJugador) {
+        // Donar recursos controlats.
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            session.beginTransaction();
+            List<RecursJugador> recursos = session.createNamedQuery(
+                    "RecursJugador.perJugador", RecursJugador.class)
+                    .setParameter("idJugador", idJugador)
+                    .getResultList();
+            for (RecursJugador recurs : recursos) {
+                recurs.setQuantitat(10);
+            }
+            session.getTransaction().commit();
+        }
+    }
+
+    private static CartaDesenvolupament prepararCartaPerJugar(int idJugador, int idPartida) {
+        // Busca una carta monopoli del jugador o en prepara una de la pila.
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            session.beginTransaction();
+            CartaDesenvolupament carta = session.createQuery(
+                    "FROM CartaDesenvolupament c WHERE c.ma.id = :idJugador "
+                        + "AND c.tipusCarta = :tipus", CartaDesenvolupament.class)
+                    .setParameter("idJugador", idJugador)
+                    .setParameter("tipus", TipusCarta.MONOPOLI)
+                    .setMaxResults(1)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+            if (carta == null) {
+                carta = session.createQuery(
+                        "FROM CartaDesenvolupament c WHERE c.pila.id = :idPartida "
+                                + "AND c.tipusCarta = :tipus", CartaDesenvolupament.class)
+                        .setParameter("idPartida", idPartida)
+                        .setParameter("tipus", TipusCarta.MONOPOLI)
+                        .setMaxResults(1)
+                        .getSingleResult();
+                carta.setPila(null);
+                carta.setMa(session.get(Jugador.class, idJugador));
+            }
+
+            carta.setRondaCompra(0);
+            session.getTransaction().commit();
+            return carta;
+        }
+    }
+
+    private static boolean lladrePendent(int idPartida) {
+        // Comprova si la tirada ha obligat a moure el lladre.
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "SELECT p.lladrePendent FROM Partida p WHERE p.id = :idPartida", Boolean.class)
+                    .setParameter("idPartida", idPartida)
+                    .getSingleResult();
+        }
+    }
+
+    private static int obtenirHexagonAlternatiu(int idPartida) {
+        // Agafa un hexagon diferent de l'actual per moure el lladre.
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "SELECT h.id FROM Hexagon h WHERE h.partida.id = :idPartida "
+                            + "AND h.id <> (SELECT p.lladre.id FROM Partida p WHERE p.id = :idPartida) "
+                            + "ORDER BY h.id", Integer.class)
+                    .setParameter("idPartida", idPartida)
+                    .setMaxResults(1)
+                    .getSingleResult();
+        }
+    }
+
+    private static int obtenirVertexPoblat(int idJugador) {
+        // Obte el vertex d'un poblat propi per provar la millora a ciutat.
+        try (Session session = SessionManager.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "SELECT p.vertex.id FROM Poblat p WHERE p.propietari.id = :idJugador ORDER BY p.id",
+                    Integer.class)
+                    .setParameter("idJugador", idJugador)
+                    .setMaxResults(1)
+                    .getSingleResult();
+        }
+    }
+
     private static List<Jugador> obtenirJugadors(int idPartida) {
+        // Carrega els jugadors de la partida en ordre de torn.
         try (Session session = SessionManager.getSessionFactory().openSession()) {
             return session.createQuery(
                     "FROM Jugador j WHERE j.partida.id = :idPartida ORDER BY j.ordreTorn", Jugador.class)
@@ -109,6 +229,7 @@ public class Main {
     }
 
     private static void prepararPartida(JugadorDao jugadorDao, List<Jugador> jugadors) {
+        // Coloca un poblat i una carretera per jugador i ronda.
         List<Jugador> ordreNormal = jugadors.stream()
                 .sorted(Comparator.comparingInt(Jugador::getOrdreTorn))
                 .toList();
@@ -129,6 +250,7 @@ public class Main {
     }
 
     private static int obtenirArestaDelVertex(int idVertex) {
+        // Busca una carretera lliure connectada al vertex seleccionat.
         try (Session session = SessionManager.getSessionFactory().openSession()) {
             Aresta aresta = session.createQuery(
                 "FROM Aresta a WHERE (a.vertexA.id = :idVertex OR a.vertexB.id = :idVertex) "
