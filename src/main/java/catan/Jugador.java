@@ -143,5 +143,26 @@ public class Jugador {
     public void setConstruccions(List<Construccio> construccions) {
         this.construccions = construccions;
     }
+    
+    @Override
+    public String toString() {
+        return "Jugador{id=" + id + ", nom=" + nom + ", color=" + color
+                + ", ordreTorn=" + ordreTorn + ", cavallersJugats=" + cavallersJugats + "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Jugador))
+            return false;
+        Jugador other = (Jugador) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Jugador.class.hashCode();
+    }
 
 }

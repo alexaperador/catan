@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-
 @Entity
 @Table(name = "Vertex")
 public class Vertex {
@@ -56,6 +55,26 @@ public class Vertex {
 
     public void setCodi(int codi) {
         this.codi = codi;
+    }
+
+    @Override
+    public String toString() {
+        return "Vertex [id=" + id + ", codi=" + codi + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Vertex))
+            return false;
+        Vertex other = (Vertex) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Vertex.class.hashCode();
     }
 
 }

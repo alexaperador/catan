@@ -136,4 +136,25 @@ public class Hexagon {
         this.hexagonVertexs = hexagonVertexs;
     }
 
+    @Override
+    public String toString() {
+        return "Hexagon [id=" + id + ", codi=" + codi + ", terreny=" + terreny + ", numero=" + numero + ", q=" + q
+                + ", r=" + r + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Hexagon))
+            return false;
+        Hexagon other = (Hexagon) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Hexagon.class.hashCode();
+    }
+
 }

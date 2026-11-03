@@ -94,4 +94,25 @@ public class CartaDesenvolupament {
     public void setPila(Partida pila) {
         this.pila = pila;
     }
+
+    @Override
+    public String toString() {
+        return "CartaDesenvolupament [id=" + id + ", tipusCarta=" + tipusCarta + ", usada=" + usada
+                + ", rondaCompra=" + rondaCompra + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof CartaDesenvolupament))
+            return false;
+        CartaDesenvolupament other = (CartaDesenvolupament) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return CartaDesenvolupament.class.hashCode();
+    }
 }

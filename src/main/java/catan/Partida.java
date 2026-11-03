@@ -41,7 +41,7 @@ public class Partida {
     @PastOrPresent(message = "La data d'inici no pot ser futura")
     @Column(name = "data_inici", nullable = false)
     private LocalDate dataInici;
-    
+
     @NotNull(message = "La ronda és obligatòria")
     @Min(value = 1)
     @Column(name = "ronda")
@@ -260,5 +260,27 @@ public class Partida {
 
     public void addAresta(Aresta aresta) {
         this.arestes.add(aresta);
+    }
+
+    @Override
+    public String toString() {
+        return "Partida [id=" + id + ", estat=" + estat + ", dataInici=" + dataInici + ", ronda=" + ronda
+                + ", ultimaTirada=" + ultimaTirada + ", puntsPerGuanyar=" + puntsPerGuanyar + ", dausTirats="
+                + dausTirats + ", lladrePendent=" + lladrePendent + ", jugadors=" + jugadors + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Partida))
+            return false;
+        Partida other = (Partida) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Partida.class.hashCode();
     }
 }

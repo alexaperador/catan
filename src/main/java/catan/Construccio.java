@@ -45,4 +45,24 @@ public abstract class Construccio {
     public void setPropietari(Jugador propietari) {
         this.propietari = propietari;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{id=" + id + "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Construccio))
+            return false;
+        Construccio other = (Construccio) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Construccio.class.hashCode();
+    }
 }

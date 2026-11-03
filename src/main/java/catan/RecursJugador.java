@@ -76,4 +76,24 @@ public class RecursJugador {
     public void setJugador(Jugador jugador) {
         this.jugador = jugador;
     }
+
+    @Override
+    public String toString() {
+        return "RecursJugador [id=" + id + ", tipusRecurs=" + tipusRecurs + ", quantitat=" + quantitat + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof RecursJugador))
+            return false;
+        RecursJugador other = (RecursJugador) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return RecursJugador.class.hashCode();
+    }
 }

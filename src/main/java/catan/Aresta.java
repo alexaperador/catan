@@ -86,4 +86,24 @@ public class Aresta {
         this.vertexB = vertexB;
     }
 
+    @Override
+    public String toString() {
+        return "Aresta [id=" + id + ", codi=" + codi + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Aresta))
+            return false;
+        Aresta other = (Aresta) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Aresta.class.hashCode();
+    }
+
 }
