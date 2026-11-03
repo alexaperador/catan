@@ -95,3 +95,24 @@ Cada clase tiene su tabla y no hay columnas a null por pertenecer a otro subtipo
   - RecursJugador.perJugadorITipus
 
   El resto de consultas son HQL/JPQL dentro de los DAO.
+
+# 2. Metodos Dao
+## 2.1 PartidaDao
+- `int iniciarPartida(List<String> nomsJugadors)`: Crea la partida, los jugadores y el tablero a partir de los CSV. Devuelve el id de la partida.
+- `void mostrarTauler(int idPartida)`: Imprime el tablero en consola, con hexágonos, vértices y aristas, y las construcciones de cada jugador.
+- `void mostrarPartida(int idPartida)`: Imprime la partida en consola, con el tablero y los jugadores y sus recursos y construcciones.
+- `Jugador exercitMesGran(int idPartida)`: Devuelve el jugador con el ejercito más grande (3 o más cartas de caballero jugadas). Si hay empate, devuelve null.
+- `List<Vertex> vertexsDisponibles(int idJugador)`: Devuelve los vértices donde el jugador puede construir un poblado: libres, sin asentamientos contiguos y conectados a una carretera suya.
+- `Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida)`: Tira los dos dados y reparte los recursos según el resultado. Devuelve, por cada jugador los recursos recibidos. Si sale 7, cada jugador descarta la mitad de sus recursos y queda pendiente mover el ladrón.
+- `void comprovarVictoria(int idPartida)`: Comprueba por cada jugador si ha llegado a los puntos necesarios para ganar, entonces marca la partida como finalizada y asigna el ganador.
+
+## 2.2 JugadorDao
+- `void mostrarRecursor(int idJugador)`: Imprime en consola los recursos del jugador.
+- `void comerciarBanca(int idJugador, TipusRecurs dona, TipusRecurs rep)`: Permite al jugador intercambiar 4 cartas de un recurso por 1 carta de otro recurso con la banca.
+- `void comprarCarta(int idJugador)`: Permite al jugador comprar una carta de desarrollo de la pila de la partida, si tiene recursos suficientes. Se descuenta el coste y se añade la carta a su mano. Si le toca una carta de victoria, se comprueba si ha ganado la partida.
+- `void jugarCarta(int idJugador, int idCarta, TipusRecurs recurs)`: Juega una carta de desarrollo del jugador. Con MONOPOLI, el jugador recibe todos los recursos del tipo recurs de los demás jugadores. Con CAVALLER, suma un caballero jugado, deja el ladrón pendiente de mover y comprueba si hay victoria. Lanza IllegalStateException si es de punto de victoria.
+- `void construirCarretera(int idJugador, int idAresta)`: Construye una carretera del jugador en la arista indicada. La arista debe estar libre y conectada a un asentamiento o carretera del jugador. Fuera de la preparación cuesta 1 de FUSTA y 1 de MAO, y requiere haber tirado los dados y no tener el ladrón pendiente. En la preparación es gratis, pero debe tocar el poblado recién colocado en ese turno. El máximo es de 15 carreteras por jugador.
+- `void millorarACiutat(int idJugador, int idVertex)`: Mejora a ciudad un poblado del jugador situado en el vértice indicado. Cuesta 2 de BLAT y 3 de MINERAL, y el jugador puede tener como máximo 4 ciudades. Al terminar comprueba si el jugador ha ganado.
+- `int calcularPunts(int idJugador)`: Calcula los puntos de victoria del jugador: 1 por cada poblado, 2 por cada ciudad, 2 por ejercito más grande y 2 por carretera más larga. Devuelve el total.
+- `void passarTorn(int idJugador)`:
+- `void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima)`:
