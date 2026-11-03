@@ -23,7 +23,6 @@ import catan.enums.ColorJugador;
 import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
-import catan.enums.TipusTerreny;
 import catan.utils.CarregadorTauler;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
@@ -68,7 +67,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             return partida.getId();
         } catch (RuntimeException e) {
             handleException(session, e);
-            return -1;
+            throw e;
         }
     }
 
@@ -86,6 +85,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         return partida;
     }
 
+    @Override
     public void mostrarTauler(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
         try {
@@ -133,33 +133,11 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             session.getTransaction().commit();
         } catch (RuntimeException e) {
             handleException(session, e);
+            throw e;
         }
     }
 
-    public void mostrarRecursos(int idJugador) {
-        Session session = sessionFactory.getCurrentSession();
-        try {
-            session.beginTransaction();
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
-
-            List<RecursJugador> recursos = session
-                    .createNamedQuery("RecursJugador.perJugador", RecursJugador.class)
-                    .setParameter("idJugador", idJugador)
-                    .getResultList();
-
-            System.out.println("Recursos de " + jugador.getNom() + " (" + jugador.getColor() + ")");
-            for (RecursJugador r : recursos) {
-                System.out.println("  " + r.getTipusRecurs() + ": " + r.getQuantitat());
-            }
-            session.getTransaction().commit();
-        } catch (RuntimeException e) {
-            handleException(session, e);
-        }
-    }
-
+    @Override
     public void mostrarPartida(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
         try {
@@ -177,7 +155,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                     .createNamedQuery("Jugador.perPartida", Jugador.class)
                     .setParameter("idPartida", idPartida)
                     .getResultList();
-            Jugador exercitMesGran = exercitMesGran(idPartida);
+            JugadorDao jugadorDao = new JugadorDao();
 
             for (Jugador jugador : jugadors) {
                 int id = jugador.getId();
@@ -190,22 +168,13 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 long carreteres = session
                         .createQuery("SELECT COUNT(r) FROM Carretera r WHERE r.propietari.id = :id", Long.class)
                         .setParameter("id", id).uniqueResult();
-                long cartesPunt = session.createQuery(
-                        "SELECT COUNT(c) FROM CartaDesenvolupament c "
-                                + "WHERE c.ma.id = :id AND c.tipusCarta = :tipus",
-                        Long.class)
-                        .setParameter("id", id)
-                        .setParameter("tipus", TipusCarta.PUNT_VICTORIA)
-                        .uniqueResult();
+
                 Long totalRecursos = session.createQuery(
                         "SELECT SUM(r.quantitat) FROM RecursJugador r WHERE r.jugador.id = :id", Long.class)
                         .setParameter("id", id)
                         .uniqueResult();
 
-                long punts = poblats + 2 * ciutats + cartesPunt;
-                if (exercitMesGran != null && exercitMesGran.getId().equals(jugador.getId())) {
-                    punts += 2;
-                }
+                int punts = jugadorDao.calcularPunts(id);
 
                 System.out.println(
                         "- " + jugador.getNom() + " (" + jugador.getColor() + ", torn " + jugador.getOrdreTorn() + ")");
@@ -218,9 +187,11 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             session.getTransaction().commit();
         } catch (RuntimeException e) {
             handleException(session, e);
+            throw e;
         }
     }
 
+    @Override
     public Jugador exercitMesGran(int idPartida) {
         Session session = sessionFactory.getCurrentSession();
         boolean transaccioIniciada = !session.getTransaction().isActive();
@@ -260,6 +231,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         }
     }
 
+    @Override
     public List<Vertex> vertexsDisponibles(int idJugador) {
         Session session = sessionFactory.getCurrentSession();
         try {
@@ -270,6 +242,11 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             }
 
             Partida partida = jugador.getPartida();
+
+            if (partida.getEstat() == EstatPartida.FINALITZADA) {
+                throw new IllegalStateException("La partida ja ha finalitzat");
+            }
+
             boolean preparacio = partida.getEstat().equals(EstatPartida.PREPARACIO);
 
             if (preparacio) {
@@ -313,13 +290,13 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             return vertexs;
         } catch (RuntimeException e) {
             handleException(session, e);
-            return Collections.emptyList();
+            throw e;
         }
     }
 
     @Override
     public Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida) {
-        Random RANDOM = new Random();
+        Random random = new Random();
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -343,7 +320,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                 resum.put(j.getId(), new EnumMap<>(TipusRecurs.class));
             }
 
-            int tirada = (RANDOM.nextInt(6) + 1) + (RANDOM.nextInt(6) + 1);
+            int tirada = (random.nextInt(6) + 1) + (random.nextInt(6) + 1);
             partida.setUltimaTirada(tirada);
             partida.setDausTirats(true);
 
@@ -371,7 +348,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
                     if (hexagon.getId().equals(idLladre)) {
                         continue;
                     }
-                    TipusRecurs recurs = recursDelTerreny(hexagon.getTerreny());
+                    TipusRecurs recurs = hexagon.getTerreny().getRecurs();
                     if (recurs == null) {
                         continue;
                     }
@@ -395,23 +372,6 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         } catch (RuntimeException e) {
             handleException(session, e);
             throw e;
-        }
-    }
-
-    private TipusRecurs recursDelTerreny(TipusTerreny terreny) {
-        switch (terreny) {
-            case BOSC:
-                return TipusRecurs.FUSTA;
-            case TURONS:
-                return TipusRecurs.MAO;
-            case PASTURES:
-                return TipusRecurs.LLANA;
-            case CAMPS:
-                return TipusRecurs.BLAT;
-            case MUNTANYES:
-                return TipusRecurs.MINERAL;
-            default:
-                return null;
         }
     }
 

@@ -18,7 +18,6 @@ import catan.Vertex;
 import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
-import catan.enums.TipusTerreny;
 
 public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugadorDao {
 
@@ -179,10 +178,10 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             Jugador jugador = obtenirJugador(session, idJugador);
             Partida partida = jugador.getPartida();
             idPartida = partida.getId();
-            validarTornEnCurs(partida, idJugador, true, false, "jugar una carta");
+            validarTornEnCurs(partida, idJugador, true, true, "jugar una carta");
             CartaDesenvolupament carta = session.get(CartaDesenvolupament.class, idCarta);
             if (carta == null) {
-                throw new IllegalArgumentException("carta no encontrada");
+                throw new IllegalArgumentException("No existeix la carta: " + idCarta);
             }
             if (!jugador.getCartesDesenvolupament().contains(carta)) {
                 throw new IllegalStateException("No tens aquesta carta");
@@ -201,13 +200,14 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                     if (recurs == null) {
                         throw new IllegalArgumentException("Cal indicar el recurs a monopolitzar");
                     }
+                    
                     RecursJugador recursJugadorActiu = session
                             .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
                             .setParameter("idJugador", idJugador)
                             .setParameter("tipus", recurs)
                             .getSingleResult();
-                    List<Jugador> TotsJugadors = partida.getJugadors();
-                    for (Jugador j : TotsJugadors) {
+
+                    for (Jugador j : partida.getJugadors()) {
                         if (!j.getId().equals(idJugador)) {
                             RecursJugador recursJugador = session
                                     .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
@@ -221,7 +221,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                     }
                     break;
                 case PUNT_VICTORIA:
-
                     throw new IllegalStateException("Les cartes de punt de victòria no es juguen");
                 case CAVALLER:
                     int cantitatCavallers = jugador.getCavallersJugats() + 1;
@@ -466,7 +465,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                         .setParameter("idVertex", idVertex)
                         .getResultList();
                 for (Hexagon hexagon : hexagons) {
-                    TipusRecurs recurs = recursDelTerreny(hexagon.getTerreny());
+                    TipusRecurs recurs = hexagon.getTerreny().getRecurs();
                     if (recurs == null) {
                         continue;
                     }
@@ -487,23 +486,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
         }
 
         new PartidaDao().comprovarVictoria(idPartida);
-    }
-
-    private TipusRecurs recursDelTerreny(TipusTerreny terreny) {
-        switch (terreny) {
-            case BOSC:
-                return TipusRecurs.FUSTA;
-            case TURONS:
-                return TipusRecurs.MAO;
-            case PASTURES:
-                return TipusRecurs.LLANA;
-            case CAMPS:
-                return TipusRecurs.BLAT;
-            case MUNTANYES:
-                return TipusRecurs.MINERAL;
-            default:
-                return null;
-        }
     }
 
     @Override

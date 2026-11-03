@@ -20,6 +20,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -32,6 +33,7 @@ public class Jugador {
     private Integer id;
 
     @NotNull(message = "El nom és obligatori")
+    @NotBlank(message = "El nom no pot estar buit")
     @Size(max = 50, message = "El nom no pot superar els {max} caràcters")
     @Column(name = "nom", nullable = false, length = 50)
     private String nom;

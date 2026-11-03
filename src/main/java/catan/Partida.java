@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.ColumnDefault;
-
 import catan.enums.EstatPartida;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -43,21 +41,21 @@ public class Partida {
     @PastOrPresent(message = "La data d'inici no pot ser futura")
     @Column(name = "data_inici", nullable = false)
     private LocalDate dataInici;
-
+    
+    @NotNull(message = "La ronda és obligatòria")
     @Min(value = 1)
-    @ColumnDefault("1")
     @Column(name = "ronda")
-    private Integer ronda;
+    private Integer ronda = 1;
 
     @Min(value = 2)
     @Max(value = 12)
     @Column(name = "ultima_tirada", nullable = true)
     private Integer ultimaTirada;
 
+    @NotNull(message = "Els punts per guanyar són obligatoris")
     @Min(value = 1)
-    @ColumnDefault("10")
     @Column(name = "punts_per_guanyar", nullable = false)
-    private Integer puntsPerGuanyar;
+    private Integer puntsPerGuanyar = 10;
 
     @Column(name = "daus_tirats", nullable = false)
     private boolean dausTirats;
