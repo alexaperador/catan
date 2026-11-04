@@ -42,20 +42,18 @@ public class Partida {
     @Column(name = "data_inici", nullable = false)
     private LocalDate dataInici;
 
-    @NotNull(message = "La ronda és obligatòria")
     @Min(value = 1)
     @Column(name = "ronda")
-    private Integer ronda = 1;
+    private int ronda = 1;
 
     @Min(value = 2)
     @Max(value = 12)
     @Column(name = "ultima_tirada", nullable = true)
     private Integer ultimaTirada;
 
-    @NotNull(message = "Els punts per guanyar són obligatoris")
     @Min(value = 1)
     @Column(name = "punts_per_guanyar", nullable = false)
-    private Integer puntsPerGuanyar = 10;
+    private int puntsPerGuanyar = 10;
 
     @Column(name = "daus_tirats", nullable = false)
     private boolean dausTirats;
@@ -90,8 +88,8 @@ public class Partida {
     @JoinColumn(name = "lladre_id", nullable = true)
     private Hexagon lladre;
 
-    public Partida(EstatPartida estat, LocalDate dataInici, Integer ronda, Integer ultimaTirada,
-            Integer puntsPerGuanyar, Boolean dausTirats, Boolean lladrePendent) {
+    public Partida(EstatPartida estat, LocalDate dataInici, int ronda, Integer ultimaTirada,
+            int puntsPerGuanyar, Boolean dausTirats, Boolean lladrePendent) {
         this.estat = estat;
         this.dataInici = dataInici;
         this.ronda = ronda;
@@ -130,11 +128,11 @@ public class Partida {
         this.dataInici = dataInici;
     }
 
-    public Integer getRonda() {
+    public int getRonda() {
         return ronda;
     }
 
-    public void setRonda(Integer ronda) {
+    public void setRonda(int ronda) {
         this.ronda = ronda;
     }
 
@@ -146,11 +144,11 @@ public class Partida {
         this.ultimaTirada = ultimaTirada;
     }
 
-    public Integer getPuntsPerGuanyar() {
+    public int getPuntsPerGuanyar() {
         return puntsPerGuanyar;
     }
 
-    public void setPuntsPerGuanyar(Integer puntsPerGuanyar) {
+    public void setPuntsPerGuanyar(int puntsPerGuanyar) {
         this.puntsPerGuanyar = puntsPerGuanyar;
     }
 

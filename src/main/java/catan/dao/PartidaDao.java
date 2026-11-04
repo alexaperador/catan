@@ -18,13 +18,11 @@ import catan.Hexagon;
 import catan.Jugador;
 import catan.Partida;
 import catan.RecursJugador;
-import catan.Vertex;
 import catan.enums.ColorJugador;
 import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
 import catan.utils.CarregadorTauler;
-import jakarta.persistence.TypedQuery;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
 
@@ -228,69 +226,6 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
             if (transaccioIniciada) {
                 handleException(session, e);
             }
-            throw e;
-        }
-    }
-
-    @Override
-    public List<Vertex> vertexsDisponibles(int idJugador) {
-        Session session = sessionFactory.getCurrentSession();
-        try {
-            session.beginTransaction();
-            Jugador jugador = session.get(Jugador.class, idJugador);
-            if (jugador == null) {
-                throw new IllegalArgumentException("No existeix el jugador: " + idJugador);
-            }
-
-            Partida partida = jugador.getPartida();
-
-            if (partida.getEstat() == EstatPartida.FINALITZADA) {
-                throw new IllegalStateException("La partida ja ha finalitzat");
-            }
-
-            boolean preparacio = partida.getEstat().equals(EstatPartida.PREPARACIO);
-
-            if (preparacio) {
-                long poblats = session
-                        .createQuery("SELECT COUNT(p) FROM Poblat p WHERE p.propietari.id = :idJugador", Long.class)
-                        .setParameter("idJugador", idJugador)
-                        .getSingleResult();
-                long carreteres = session
-                        .createQuery("SELECT COUNT(c) FROM Carretera c WHERE c.propietari.id = :idJugador", Long.class)
-                        .setParameter("idJugador", idJugador)
-                        .getSingleResult();
-                long construccionsEsperades = partida.getRonda() - 1L;
-
-                if (poblats != construccionsEsperades || carreteres != construccionsEsperades) {
-                    session.getTransaction().commit();
-                    return Collections.emptyList();
-                }
-            }
-
-            String sql = "SELECT v FROM Vertex v WHERE v.partida.id = :idPartida "
-                    + "AND NOT EXISTS (SELECT 1 FROM Assentament a WHERE a.vertex = v) "
-                    + "AND NOT EXISTS (SELECT 1 FROM Aresta ar, Assentament a2 "
-                    + "    WHERE (ar.vertexA = v AND a2.vertex = ar.vertexB) "
-                    + "    OR (ar.vertexB = v AND a2.vertex = ar.vertexA)) ";
-
-            if (!preparacio) {
-                sql += "AND EXISTS (SELECT 1 FROM Carretera c "
-                        + "    WHERE c.propietari.id = :idJugador "
-                        + "      AND (c.aresta.vertexA = v OR c.aresta.vertexB = v)) ";
-            }
-
-            sql += "ORDER BY v.codi";
-
-            TypedQuery<Vertex> query = session.createQuery(sql, Vertex.class)
-                    .setParameter("idPartida", partida.getId());
-            if (!preparacio) {
-                query.setParameter("idJugador", idJugador);
-            }
-            List<Vertex> vertexs = query.getResultList();
-            session.getTransaction().commit();
-            return vertexs;
-        } catch (RuntimeException e) {
-            handleException(session, e);
             throw e;
         }
     }

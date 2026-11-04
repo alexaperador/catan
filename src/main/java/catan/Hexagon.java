@@ -61,7 +61,7 @@ public class Hexagon {
     @JoinColumn(name = "partida_id", nullable = false)
     private Partida partida;
 
-    @OneToMany(mappedBy = "hexagon", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "hexagon", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<HexagonVertex> hexagonVertexs = new ArrayList<>();
 
     public Hexagon(Partida partida, int codi, TipusTerreny terreny, Integer numero, int q, int r) {

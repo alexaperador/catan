@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import catan.Jugador;
-import catan.Vertex;
 import catan.enums.TipusRecurs;
 
 public interface IPartidaDao {
@@ -14,12 +13,9 @@ public interface IPartidaDao {
     
     void mostrarPartida(int idPartida);
 
-    Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida); // idJugador -> recursos rebuts
+    Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida);
 
     void comprovarVictoria(int idPartida);
 
     Jugador exercitMesGran(int idPartida);
-
-    List<Vertex> vertexsDisponibles(int idJugador);
-
 }

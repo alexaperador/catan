@@ -1,5 +1,8 @@
 package catan.dao;
 
+import java.util.List;
+
+import catan.Vertex;
 import catan.enums.TipusRecurs;
 
 public interface IJugadorDao {
@@ -23,4 +26,5 @@ public interface IJugadorDao {
 
     void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima);
 
+    List<Vertex> vertexsDisponibles(int idJugador);
 }
