@@ -106,8 +106,6 @@ S'utilitza `@Inheritance(strategy = InheritanceType.JOINED)` a Construccio. Cada
 
 - `Jugador exercitMesGran(int idPartida)`: Retorna el jugador amb l'exèrcit més gran (3 o més cartes de cavaller jugades). Si hi ha empat o ningú arriba a 3 cavallers, retorna null.
 
-- `List<Vertex> vertexsDisponibles(int idJugador)`: Retorna els vèrtexs on el jugador pot construir un poblat: lliures, sense assentaments contigus i connectats a una carretera seva. A la preparació no s'exigeix la carretera, i retorna una llista buida si el jugador encara no ha de col·locar un poblat.
-
 - `Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida)`: Tira els dos daus i reparteix els recursos segons el resultat (1 per poblat i 2 per ciutat, sense comptar l'hexàgon del lladre). Retorna, per cada jugador, els recursos rebuts. Si surt 7, els jugadors amb més de 7 recursos descarten la meitat i queda pendent moure el lladre. Falla si ja s'han tirat els daus o hi ha un lladre pendent.
 
 - `void comprovarVictoria(int idPartida)`: Comprova per cada jugador si ha arribat als punts necessaris per guanyar, llavors marca la partida com a finalitzada i assigna el guanyador.
@@ -133,6 +131,8 @@ S'utilitza `@Inheritance(strategy = InheritanceType.JOINED)` a Construccio. Cada
 - `void passarTorn(int idJugador)`: Passa el torn al jugador següent. Ha de ser el jugador actiu, no tenir el lladre pendent i haver tirat els daus (en EN_CURS). A la preparació ha d'haver col·locat un poblat i una carretera, i l'ordre és de serp (1→n, n→1). En acabar la preparació la partida passa a EN_CURS. La ronda puja quan el torn torna al jugador 1.
 
 - `void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima)`: Mou el lladre a un altre hexàgon quan hi ha un moviment pendent (després d'un 7 o un CAVALLER). Si s'indica una víctima amb un assentament en aquest hexàgon, se li roba 1 recurs aleatori. En acabar, el lladre deixa d'estar pendent.
+
+- `List<Vertex> vertexsDisponibles(int idJugador)`: Retorna els vèrtexs on el jugador pot construir un poblat: lliures, sense assentaments contigus i connectats a una carretera seva. A la preparació no s'exigeix la carretera, i retorna una llista buida si el jugador encara no ha de col·locar un poblat.
 
 # 3. Decisions d'implementació
 
