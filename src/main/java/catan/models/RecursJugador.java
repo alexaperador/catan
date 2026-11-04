@@ -1,4 +1,4 @@
-package catan;
+package catan.models;
 
 import catan.enums.TipusRecurs;
 import jakarta.persistence.Column;

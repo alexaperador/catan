@@ -1,4 +1,4 @@
-package catan;
+package catan.models;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

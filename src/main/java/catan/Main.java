@@ -10,6 +10,12 @@ import catan.dao.JugadorDao;
 import catan.dao.PartidaDao;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
+import catan.models.Aresta;
+import catan.models.CartaDesenvolupament;
+import catan.models.Jugador;
+import catan.models.RecursJugador;
+import catan.models.Vertex;
+import catan.utils.SessionManager;
 
 public class Main {
     public static void main(String[] args) {

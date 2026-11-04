@@ -1,4 +1,4 @@
-package catan;
+package catan.models;
 
 import java.util.ArrayList;
 import java.util.List;

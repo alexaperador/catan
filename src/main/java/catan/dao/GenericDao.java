@@ -7,7 +7,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import catan.SessionManager;
+import catan.utils.SessionManager;
 
 public class GenericDao<T, ID extends Serializable> implements IGenericDao<T, ID> {
 

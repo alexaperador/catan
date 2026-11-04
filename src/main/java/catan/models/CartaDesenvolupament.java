@@ -1,4 +1,4 @@
-package catan;
+package catan.models;
 
 import catan.enums.TipusCarta;
 import jakarta.persistence.Column;

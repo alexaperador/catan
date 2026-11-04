@@ -1,4 +1,4 @@
-package catan;
+package catan.models;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -143,7 +143,7 @@ public class Jugador {
     public void setConstruccions(List<Construccio> construccions) {
         this.construccions = construccions;
     }
-    
+
     @Override
     public String toString() {
         return "Jugador{id=" + id + ", nom=" + nom + ", color=" + color

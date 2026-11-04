@@ -1,4 +1,4 @@
-package catan;
+package catan.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

@@ -17,19 +17,19 @@
 		<property name="hibernate.format_sql">true</property>
 		<property name="hibernate.highlight_sql">true</property>
 
-		<mapping class="catan.Partida"/>
-		<mapping class="catan.Jugador"/>
-		<mapping class="catan.Hexagon"/>
-		<mapping class="catan.Vertex"/>
-		<mapping class="catan.Aresta"/>
-		<mapping class="catan.HexagonVertex"/>
-		<mapping class="catan.RecursJugador"/>
-		<mapping class="catan.CartaDesenvolupament"/>
-		<mapping class="catan.Construccio"/>
-		<mapping class="catan.Assentament"/>
-		<mapping class="catan.Poblat"/>
-		<mapping class="catan.Ciutat"/>
-		<mapping class="catan.Carretera"/>
+		<mapping class="catan.models.Partida"/>
+		<mapping class="catan.models.Jugador"/>
+		<mapping class="catan.models.Hexagon"/>
+		<mapping class="catan.models.Vertex"/>
+		<mapping class="catan.models.Aresta"/>
+		<mapping class="catan.models.HexagonVertex"/>
+		<mapping class="catan.models.RecursJugador"/>
+		<mapping class="catan.models.CartaDesenvolupament"/>
+		<mapping class="catan.models.Construccio"/>
+		<mapping class="catan.models.Assentament"/>
+		<mapping class="catan.models.Poblat"/>
+		<mapping class="catan.models.Ciutat"/>
+		<mapping class="catan.models.Carretera"/>
 		
 	</session-factory>
 </hibernate-configuration>

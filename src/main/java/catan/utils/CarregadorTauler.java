@@ -14,13 +14,13 @@ import java.util.Map;
 
 import org.hibernate.Session;
 
-import catan.Aresta;
-import catan.Hexagon;
-import catan.HexagonVertex;
 import catan.Main;
-import catan.Partida;
-import catan.Vertex;
 import catan.enums.TipusTerreny;
+import catan.models.Aresta;
+import catan.models.Hexagon;
+import catan.models.HexagonVertex;
+import catan.models.Partida;
+import catan.models.Vertex;
 
 public class CarregadorTauler {
     private final static String CARPETA_CSV = "csv/";

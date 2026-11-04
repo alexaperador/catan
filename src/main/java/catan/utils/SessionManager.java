@@ -1,4 +1,4 @@
-package catan;
+package catan.utils;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;

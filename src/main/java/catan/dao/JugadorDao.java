@@ -6,19 +6,19 @@ import java.util.Random;
 
 import org.hibernate.Session;
 
-import catan.Aresta;
-import catan.Carretera;
-import catan.CartaDesenvolupament;
-import catan.Ciutat;
-import catan.Hexagon;
-import catan.Jugador;
-import catan.Partida;
-import catan.Poblat;
-import catan.RecursJugador;
-import catan.Vertex;
 import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
+import catan.models.Aresta;
+import catan.models.Carretera;
+import catan.models.CartaDesenvolupament;
+import catan.models.Ciutat;
+import catan.models.Hexagon;
+import catan.models.Jugador;
+import catan.models.Partida;
+import catan.models.Poblat;
+import catan.models.RecursJugador;
+import catan.models.Vertex;
 import jakarta.persistence.TypedQuery;
 
 public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugadorDao {
@@ -202,7 +202,7 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                     if (recurs == null) {
                         throw new IllegalArgumentException("Cal indicar el recurs a monopolitzar");
                     }
-                    
+
                     RecursJugador recursJugadorActiu = session
                             .createNamedQuery("RecursJugador.perJugadorITipus", RecursJugador.class)
                             .setParameter("idJugador", idJugador)

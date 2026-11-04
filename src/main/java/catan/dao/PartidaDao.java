@@ -11,17 +11,17 @@ import java.util.Random;
 
 import org.hibernate.Session;
 
-import catan.Assentament;
-import catan.CartaDesenvolupament;
-import catan.Ciutat;
-import catan.Hexagon;
-import catan.Jugador;
-import catan.Partida;
-import catan.RecursJugador;
 import catan.enums.ColorJugador;
 import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
+import catan.models.Assentament;
+import catan.models.CartaDesenvolupament;
+import catan.models.Ciutat;
+import catan.models.Hexagon;
+import catan.models.Jugador;
+import catan.models.Partida;
+import catan.models.RecursJugador;
 import catan.utils.CarregadorTauler;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
