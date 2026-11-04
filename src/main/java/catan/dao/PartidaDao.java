@@ -24,6 +24,7 @@ import catan.enums.EstatPartida;
 import catan.enums.TipusCarta;
 import catan.enums.TipusRecurs;
 import catan.utils.CarregadorTauler;
+import jakarta.persistence.TypedQuery;
 
 public class PartidaDao extends GenericDao<Partida, Integer> implements IPartidaDao {
 
@@ -280,7 +281,7 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
 
             sql += "ORDER BY v.codi";
 
-            var query = session.createQuery(sql, Vertex.class)
+            TypedQuery<Vertex> query = session.createQuery(sql, Vertex.class)
                     .setParameter("idPartida", partida.getId());
             if (!preparacio) {
                 query.setParameter("idJugador", idJugador);

@@ -299,14 +299,14 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                 long poblatsLliures = session.createQuery(
                         "SELECT COUNT(p) FROM Poblat p "
                                 + "WHERE p.propietari.id = :id "
-                                + "AND (p.vertex.id = :vA OR p.vertex.id = :vB) "
+                                + "AND (p.vertex.id = :vertexA OR p.vertex.id = :vertexB) "
                                 + "AND NOT EXISTS (SELECT 1 FROM Carretera c "
                                 + "    WHERE c.propietari.id = :id "
                                 + "    AND (c.aresta.vertexA = p.vertex OR c.aresta.vertexB = p.vertex))",
                         Long.class)
                         .setParameter("id", idJugador)
-                        .setParameter("vA", vertexA)
-                        .setParameter("vB", vertexB)
+                        .setParameter("vertexA", vertexA)
+                        .setParameter("vertexB", vertexB)
                         .uniqueResult();
                 if (poblatsLliures == 0) {
                     throw new IllegalStateException("La carretera ha de tocar el poblat que acabes de col·locar");
@@ -314,21 +314,21 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
             } else {
                 long assentaments = session.createQuery(
                         "SELECT COUNT(a) FROM Assentament a "
-                                + "WHERE a.propietari.id = :id AND (a.vertex.id = :vA OR a.vertex.id = :vB)",
+                                + "WHERE a.propietari.id = :id AND (a.vertex.id = :vertexA OR a.vertex.id = :vertexB)",
                         Long.class)
                         .setParameter("id", idJugador)
-                        .setParameter("vA", vertexA)
-                        .setParameter("vB", vertexB)
+                        .setParameter("vertexA", vertexA)
+                        .setParameter("vertexB", vertexB)
                         .uniqueResult();
                 long carreteresVeines = session.createQuery(
                         "SELECT COUNT(c) FROM Carretera c "
                                 + "WHERE c.propietari.id = :id "
-                                + "AND (c.aresta.vertexA.id = :vA OR c.aresta.vertexA.id = :vB "
-                                + "  OR c.aresta.vertexB.id = :vA OR c.aresta.vertexB.id = :vB)",
+                                + "AND (c.aresta.vertexA.id = :vertexA OR c.aresta.vertexA.id = :vertexB "
+                                + "  OR c.aresta.vertexB.id = :vertexA OR c.aresta.vertexB.id = :vertexB)",
                         Long.class)
                         .setParameter("id", idJugador)
-                        .setParameter("vA", vertexA)
-                        .setParameter("vB", vertexB)
+                        .setParameter("vertexA", vertexA)
+                        .setParameter("vertexB", vertexB)
                         .uniqueResult();
                 if (assentaments == 0 && carreteresVeines == 0) {
                     throw new IllegalStateException("L'aresta no està connectada a cap construcció teva");
