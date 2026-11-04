@@ -1,141 +1,141 @@
-## Miembros del grupo
+## Membres del grup
 
 - Badre
 - Erik
 - Alex Aperador Salcedo
 
-# 1. Modelo de datos: relaciones y por qué se han elegido así
+# 1. Model de dades: relacions i per què s'han triat així
 
-## 1.1 Criterios generales
+## 1.1 Criteris generals
 
-- Se usa Integer en los campos que pueden ser null: Hexagon.numero (el desierto no tiene número), Partida.ultimaTirada (aún no se ha tirado) y CartaDesenvolupament.rondaCompra (la carta está en la pila). También en los ids y en algunos campos obligatorios (Partida.ronda, Partida.puntsPerGuanyar, Hexagon.codi), que llevan @NotNull. El resto son tipos primitivos, que no admiten null.
-- Cada partida crea su propio tablero. El campo codi de Hexagon, Vertex y Aresta guarda el id del CSV, los métodos trabajan siempre con el id de la BD, que no coincide con el código a partir de la segunda partida.
+- S'utilitza Integer en els camps que poden ser null: Hexagon.numero (el desert no té número), Partida.ultimaTirada (encara no s'ha tirat) i CartaDesenvolupament.rondaCompra (la carta és a la pila). També en els ids i en alguns camps obligatoris (Partida.ronda, Partida.puntsPerGuanyar, Hexagon.codi), que porten @NotNull. La resta són tipus primitius, que no admeten null.
+- Cada partida crea el seu propi tauler. El camp codi de Hexagon, Vertex i Aresta guarda l'id del CSV, els mètodes treballen sempre amb l'id de la BD, que no coincideix amb el codi a partir de la segona partida.
 
-## 1.2 Relaciones (todas bidireccionales salvo que se indique)
+## 1.2 Relacions (totes bidireccionals tret que s'indiqui el contrari)
 
-En las relaciones bidireccionales la clave foránea está en el lado "muchos" (@ManyToOne, que es el propietario de la relación) y el lado "uno" usa mappedBy. Se han dejado bidireccionales las que se navegan desde el padre (partida.getJugadors(), jugador.getRecursos()...) y donde necesitamos cascade/orphanRemoval; las demás son unidireccionales para no mantener dos lados sin necesidad.
+En les relacions bidireccionals la clau forana és al costat "molts" (@ManyToOne, que és el propietari de la relació) i el costat "un" utilitza mappedBy. S'han deixat bidireccionals les que es naveguen des del pare (partida.getJugadors(), jugador.getRecursos()...) i on necessitem cascade/orphanRemoval; les altres són unidireccionals per no mantenir dos costats sense necessitat.
 
 ### Partida 1 - N Jugador (jugadors.partida_id)
 
-Un jugador pertenece a una única partida (enunciado). cascade = ALL y orphanRemoval: los jugadores viven y mueren con su partida.
+Un jugador pertany a una única partida (enunciat). cascade = ALL i orphanRemoval: els jugadors viuen i moren amb la seva partida.
 
-### Partida 0..1 - Jugador "actiu" y "guanyador" (@ManyToOne unidireccional, nullable)
+### Partida 0..1 - Jugador "actiu" i "guanyador" (@ManyToOne unidireccional, nullable)
 
-Al crear la partida todavía no hay ganador, y el activo se asigna después de crear a los jugadores, por eso admiten null. Es @ManyToOne y no @OneToOne porque no hace falta el lado inverso. Sin cascade: el jugador ya existe y pertenece a la partida por la otra relación.
+Quan es crea la partida encara no hi ha guanyador, i l'actiu s'assigna després de crear els jugadors, per això admeten null. És @ManyToOne i no @OneToOne perquè no cal el costat invers. Sense cascade: el jugador ja existeix i pertany a la partida per l'altra relació.
 
 ### Partida 0..1 - Hexagon "lladre" (@ManyToOne unidireccional, nullable)
 
-Apunta al hexágono donde está el ladrón. Sin cascade: el hexágono ya pertenece al tablero.
+Apunta a l'hexàgon on és el lladre. Sense cascade: l'hexàgon ja pertany al tauler.
 
-### Partida 1 - N Hexagon, Vertex y Aresta (tauler, vertexs, arestes)
+### Partida 1 - N Hexagon, Vertex i Aresta (tauler, vertexs, arestes)
 
-Cada partida tiene su propio tablero, creado al iniciarla a partir de los CSV. cascade = ALL y orphanRemoval: si se borra la partida se borra su tablero. Los tres tienen el @ManyToOne a Partida con optional = false.
+Cada partida té el seu propi tauler, creat en iniciar-la a partir dels CSV. cascade = ALL i orphanRemoval: si s'esborra la partida s'esborra el seu tauler. Els tres tenen el @ManyToOne a Partida amb optional = false.
 
-### Hexagon N - N Vertex → entidad HexagonVertex
+### Hexagon N - N Vertex → entitat HexagonVertex
 
-La relación guarda un dato propio (la posición 0-5 del vértice dentro del hexágono). Por eso no se usa un @ManyToMany sino una entidad intermedia con id propio y dos @ManyToOne (a Hexagon y a Vertex). Hexagon tiene la lista inversa hexagonVertexs (cascade = ALL + orphanRemoval).
+La relació guarda una dada pròpia (la posició 0-5 del vèrtex dins de l'hexàgon). Per això no s'utilitza un @ManyToMany sinó una entitat intermèdia amb id propi i dos @ManyToOne (a Hexagon i a Vertex). Hexagon té la llista inversa hexagonVertexs (cascade = ALL + orphanRemoval).
 
-### Aresta N - 1 Vertex (vertexA y vertexB)
+### Aresta N - 1 Vertex (vertexA i vertexB)
 
-Cada arista une exactamente dos vértices: dos @ManyToOne obligatorios. Dos vértices son adyacentes si existe una arista que los une, esa consulta se resuelve en JPQL.
+Cada aresta uneix exactament dos vèrtexs: dos @ManyToOne obligatoris. Dos vèrtexs són adjacents si existeix una aresta que els uneix, aquesta consulta es resol en JPQL.
 
-### Jugador 1 - N RecursJugador (inventario)
+### Jugador 1 - N RecursJugador (inventari)
 
-Una fila por jugador y tipo de recurso, creadas a 0 al crear al jugador. Es una tabla y no un Map para poder consultarla en JPQL y respetar el diagrama del enunciado. unique (jugador, tipus): no puede haber dos filas del mismo recurso para el mismo jugador. cascade = ALL + orphanRemoval.
+Una fila per jugador i tipus de recurs, creades a 0 en crear el jugador. És una taula i no un Map per poder consultar-la en JPQL i respectar el diagrama de l'enunciat. unique (jugador, tipus): no pot haver-hi dues files del mateix recurs per al mateix jugador. cascade = ALL + orphanRemoval.
 
-### Jugador 1 - N CartaDesenvolupament "mà", y Partida 1 - N CartaDesenvolupament "pila"
+### Jugador 1 - N CartaDesenvolupament "mà", i Partida 1 - N CartaDesenvolupament "pila"
 
-La carta tiene dos @ManyToOne opcionales: pila (partida) y ma (jugador). En cada momento solo uno de los dos tiene valor: en la pila pertenece a la partida y sin propietario, al comprarla pasa a la mano (pila = null, ma = jugador). La carta no se borra al cambiar de sitio, por eso la lista Partida.pila no tiene orphanRemoval (sí lo tiene Jugador.cartesDesenvolupament).
+La carta té dos @ManyToOne opcionals: pila (partida) i ma (jugador). En cada moment només un dels dos té valor: a la pila pertany a la partida i sense propietari, en comprar-la passa a la mà (pila = null, ma = jugador). La carta no s'esborra en canviar de lloc, per això la llista Partida.pila no té orphanRemoval (sí que en té Jugador.cartesDesenvolupament).
 
 ### Jugador 1 - N Construccio (propietari)
 
-Toda construcción tiene propietario obligatorio. cascade = ALL + orphanRemoval en Jugador.
+Tota construcció té propietari obligatori. cascade = ALL + orphanRemoval a Jugador.
 
-### Assentament 1 - 1 Vertex y Carretera 1 - 1 Aresta (@OneToOne unidireccional con unique)
+### Assentament 1 - 1 Vertex i Carretera 1 - 1 Aresta (@OneToOne unidireccional amb unique)
 
-Un vértice solo puede tener un asentamiento y una arista solo una carretera (enunciado). Se garantiza con la restricción unique de la columna vertex_id / aresta_id. Es @OneToOne y no @ManyToOne justamente porque cada vértice/arista tiene como máximo una construcción.
+Un vèrtex només pot tenir un assentament i una aresta només una carretera (enunciat). Es garanteix amb la restricció unique de la columna vertex_id / aresta_id. És @OneToOne i no @ManyToOne justament perquè cada vèrtex/aresta té com a màxim una construcció.
 
-## 1.3 Herencia de Construccio: JOINED
+## 1.3 Herència de Construccio: JOINED
 
 ```
 Construccio (id, propietari)
-  ├─ Assentament (vertex, único)   [abstracta]
+  ├─ Assentament (vertex, únic)   [abstracta]
   │    ├─ Poblat
   │    └─ Ciutat
   └─ Carretera (aresta, única)
 ```
 
-Se usa `@Inheritance(strategy = InheritanceType.JOINED)` en Construccio. Cada clase tiene su tabla y no hay columnas a null por pertenecer a otro subtipo. La clase intermedia abstracta Assentament permite consultar lo que haya en un vértice sin distinguir poblado de ciudad.
+S'utilitza `@Inheritance(strategy = InheritanceType.JOINED)` a Construccio. Cada classe té la seva taula i no hi ha columnes a null per pertànyer a un altre subtipus. La classe intermèdia abstracta Assentament permet consultar el que hi hagi en un vèrtex sense distingir poblat de ciutat.
 
-## 1.3 LAZY o EAGER
+## 1.4 LAZY o EAGER
 
-- Todas las relaciones están marcadas explícitamente como FetchType.LAZY, excepto Construccio.propietari.
-- Por qué LAZY: un @ManyToOne es EAGER por defecto y arrastraría objetos en cascada. Con una partida real, cargar una Partida con todo EAGER traería 19 hexágonos, 54 vértices, 72 aristas, 114 filas hexágono-vértice, los jugadores, sus recursos, construcciones y cartas, solo para, por ejemplo, construir una carretera. Con LAZY cada método carga solo lo que necesita y lo demás se consulta con JPQL (joins, COUNT, NOT EXISTS...) sin recorrer listas en Java.
-- LAZY exige que la sesión siga abierta al acceder a la relación. Se cumple porque cada método DAO trabaja dentro de su transacción y solo se accede a las relaciones dentro de ella. Los objetos que se devuelven al llamador ya cargados son los que se necesitan (por ejemplo: Vertex en vertexsDisponibles).
-- Excepción: Construccio.propietari se deja en el valor por defecto (EAGER), porque cada vez que se lee una construcción también se necesita su propietario (mostrarTauler imprime el propietario, tirarDaus reparte recursos al dueño, calcular puntos...).
+- Totes les relacions estan marcades explícitament com a FetchType.LAZY, excepte Construccio.propietari.
+- Per què LAZY: un @ManyToOne és EAGER per defecte i arrossegaria objectes en cascada. Amb una partida real, carregar una Partida amb tot EAGER portaria 19 hexàgons, 54 vèrtexs, 72 arestes, 114 files hexàgon-vèrtex, els jugadors, els seus recursos, construccions i cartes, només per, per exemple, construir una carretera. Amb LAZY cada mètode carrega només el que necessita i la resta es consulta amb JPQL (joins, COUNT, NOT EXISTS...) sense recórrer llistes en Java.
+- LAZY exigeix que la sessió segueixi oberta en accedir a la relació. Es compleix perquè cada mètode DAO treballa dins de la seva transacció i només s'accedeix a les relacions dins d'aquesta. Els objectes que es retornen al qui crida ja carregats són els que es necessiten (per exemple: Vertex a vertexsDisponibles).
+- Excepció: Construccio.propietari es deixa en el valor per defecte (EAGER), perquè cada vegada que es llegeix una construcció també es necessita el seu propietari (mostrarTauler imprimeix el propietari, tirarDaus reparteix recursos al propietari, calcular punts...).
 
-## 1.4 Cascade
+## 1.5 Cascade
 
-- cascade = ALL (+ orphanRemoval) solo en relaciones padre → hijos propios, por ejemplo: hexágono → hexagonVertexs.
-- No hay cascade en las referencias a entidades que existen por otro camino (actiu, guanyador, lladre, vertex y aresta de las construcciones), para no borrar o crear objetos ajenos por accidente.
+- cascade = ALL (+ orphanRemoval) només en relacions pare → fills propis, per exemple: hexàgon → hexagonVertexs.
+- No hi ha cascade en les referències a entitats que existeixen per un altre camí (actiu, guanyador, lladre, vertex i aresta de les construccions), per no esborrar o crear objectes aliens per accident.
 
-## 1.5 Restricciones y validaciones
+## 1.6 Restriccions i validacions
 
-- **unique:** Assentament.vertex_id, Carretera.aresta_id y RecursJugador (jugador_id, tipus)
+- **unique:** Assentament.vertex_id, Carretera.aresta_id i RecursJugador (jugador_id, tipus)
 - **check:** Hexagon.numero IS NULL OR numero <> 7.
-- nullable = false en todo lo obligatorio, length en cadenas (nom 50, enumerados 15-20).
-- **Bean Validation:** @NotNull, @NotBlank, @Size, @Min, @Max, @PastOrPresent con mensajes. Hibernate Validator valida antes de cada INSERT/UPDATE.
-- **Consultas con @NamedQuery:**
+- nullable = false en tot el que és obligatori, length en cadenes (nom 50, enumerats 15-20).
+- **Bean Validation:** @NotNull, @NotBlank, @Size, @Min, @Max, @PastOrPresent amb missatges. Hibernate Validator valida abans de cada INSERT/UPDATE.
+- **Consultes amb @NamedQuery:**
   - Jugador.perPartida
   - Hexagon.perPartida
   - HexagonVertex.assentamentsPerPartida
   - RecursJugador.perJugador
   - RecursJugador.perJugadorITipus
 
-  El resto de consultas son HQL/JPQL dentro de los DAO.
+  La resta de consultes són HQL/JPQL dins dels DAO.
 
-# 2. Metodos Dao
+# 2. Mètodes DAO
 
 ## 2.1 PartidaDao
 
-- `int iniciarPartida(List<String> nomsJugadors)`: Crea la partida, los jugadores y el tablero a partir de los CSV. Devuelve el id de la partida.
+- `int iniciarPartida(List<String> nomsJugadors)`: Crea la partida, els jugadors i el tauler a partir dels CSV. Retorna l'id de la partida.
 
-- `void mostrarTauler(int idPartida)`: Imprime cada hexágono de la partida (terreno, número y si tiene el ladrón) y, debajo, los poblados y ciudades de sus vértices con su propietario. No muestra las carreteras.
+- `void mostrarTauler(int idPartida)`: Imprimeix cada hexàgon de la partida (terreny, número i si té el lladre) i, a sota, els poblats i ciutats dels seus vèrtexs amb el seu propietari. No mostra les carreteres.
 
-- `void mostrarPartida(int idPartida)`: Imprime el estado de la partida, la ronda, el jugador activo y la última tirada. Por cada jugador muestra sus puntos, poblados, ciudades, carreteras y el total de recursos (sin el tipo).
+- `void mostrarPartida(int idPartida)`: Imprimeix l'estat de la partida, la ronda, el jugador actiu i l'última tirada. Per cada jugador mostra els seus punts, poblats, ciutats, carreteres i el total de recursos (sense el tipus).
 
-- `Jugador exercitMesGran(int idPartida)`: Devuelve el jugador con el ejercito más grande (3 o más cartas de caballero jugadas). Si hay empate o nadie llega a 3 caballeros, devuelve null.
+- `Jugador exercitMesGran(int idPartida)`: Retorna el jugador amb l'exèrcit més gran (3 o més cartes de cavaller jugades). Si hi ha empat o ningú arriba a 3 cavallers, retorna null.
 
-- `List<Vertex> vertexsDisponibles(int idJugador)`: Devuelve los vértices donde el jugador puede construir un poblado: libres, sin asentamientos contiguos y conectados a una carretera suya. En la preparación no se exige la carretera, y devuelve una lista vacía si el jugador aún no tiene que colocar un poblado.
+- `List<Vertex> vertexsDisponibles(int idJugador)`: Retorna els vèrtexs on el jugador pot construir un poblat: lliures, sense assentaments contigus i connectats a una carretera seva. A la preparació no s'exigeix la carretera, i retorna una llista buida si el jugador encara no ha de col·locar un poblat.
 
-- `Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida)`: Tira los dos dados y reparte los recursos según el resultado (1 por poblado y 2 por ciudad, sin contar el hexágono del ladrón). Devuelve, por cada jugador, los recursos recibidos. Si sale 7, los jugadores con más de 7 recursos descartan la mitad y queda pendiente mover el ladrón. Falla si ya se han tirado los dados o hay un ladrón pendiente.
+- `Map<Integer, Map<TipusRecurs, Integer>> tirarDaus(int idPartida)`: Tira els dos daus i reparteix els recursos segons el resultat (1 per poblat i 2 per ciutat, sense comptar l'hexàgon del lladre). Retorna, per cada jugador, els recursos rebuts. Si surt 7, els jugadors amb més de 7 recursos descarten la meitat i queda pendent moure el lladre. Falla si ja s'han tirat els daus o hi ha un lladre pendent.
 
-- `void comprovarVictoria(int idPartida)`: Comprueba por cada jugador si ha llegado a los puntos necesarios para ganar, entonces marca la partida como finalizada y asigna el ganador.
+- `void comprovarVictoria(int idPartida)`: Comprova per cada jugador si ha arribat als punts necessaris per guanyar, llavors marca la partida com a finalitzada i assigna el guanyador.
 
 ## 2.2 JugadorDao
 
-- `void mostrarRecursos(int idJugador)`: Imprime en consola los recursos del jugador.
+- `void mostrarRecursos(int idJugador)`: Imprimeix per consola els recursos del jugador.
 
-- `void comerciarBanca(int idJugador, TipusRecurs dona, TipusRecurs rep)`: Permite al jugador intercambiar 4 cartas de un recurso por 1 carta de otro recurso con la banca.
+- `void comerciarBanca(int idJugador, TipusRecurs dona, TipusRecurs rep)`: Permet al jugador intercanviar 4 cartes d'un recurs per 1 carta d'un altre recurs amb la banca.
 
-- `void comprarCarta(int idJugador)`: Permite al jugador comprar una carta de desarrollo de la pila de la partida. Cuesta 1 de BLAT, 1 de LLANA y 1 de MINERAL. Se descuenta el coste y se añade la carta a su mano. Si le toca una carta de victoria, se comprueba si ha ganado la partida.
+- `void comprarCarta(int idJugador)`: Permet al jugador comprar una carta de desenvolupament de la pila de la partida. Costa 1 de BLAT, 1 de LLANA i 1 de MINERAL. Es descompta el cost i s'afegeix la carta a la seva mà. Si li toca una carta de victòria, es comprova si ha guanyat la partida.
 
-- `void jugarCarta(int idJugador, int idCarta, TipusRecurs recurs)`: Juega una carta de desarrollo del jugador. No se puede jugar en la misma ronda en que se compró. Con MONOPOLI, el jugador recibe todos los recursos del tipo recurs de los demás jugadores. Con CAVALLER, suma un caballero jugado, deja el ladrón pendiente de mover y comprueba si hay victoria. Lanza IllegalStateException si es de punto de victoria.
+- `void jugarCarta(int idJugador, int idCarta, TipusRecurs recurs)`: Juga una carta de desenvolupament del jugador. No es pot jugar a la mateixa ronda en què es va comprar. Amb MONOPOLI, el jugador rep tots els recursos del tipus recurs dels altres jugadors. Amb CAVALLER, suma un cavaller jugat, deixa el lladre pendent de moure i comprova si hi ha victòria. Llança IllegalStateException si és de punt de victòria.
 
-- `void construirCarretera(int idJugador, int idAresta)`: Construye una carretera del jugador en la arista indicada. La arista debe estar libre y conectada a un asentamiento o carretera del jugador. Fuera de la preparación cuesta 1 de FUSTA y 1 de MAO, y requiere haber tirado los dados y no tener el ladrón pendiente. En la preparación es gratis, pero debe tocar el poblado recién colocado en ese turno. El máximo es de 15 carreteras por jugador.
+- `void construirCarretera(int idJugador, int idAresta)`: Construeix una carretera del jugador a l'aresta indicada. L'aresta ha d'estar lliure i connectada a un assentament o carretera del jugador. Fora de la preparació costa 1 de FUSTA i 1 de MAO, i requereix haver tirat els daus i no tenir el lladre pendent. A la preparació és gratis, però ha de tocar el poblat acabat de col·locar en aquell torn. El màxim és de 15 carreteres per jugador.
 
-- `void millorarACiutat(int idJugador, int idVertex)`: Mejora a ciudad un poblado del jugador situado en el vértice indicado. Cuesta 2 de BLAT y 3 de MINERAL, y el jugador puede tener como máximo 4 ciudades. Al terminar comprueba si el jugador ha ganado.
+- `void millorarACiutat(int idJugador, int idVertex)`: Millora a ciutat un poblat del jugador situat al vèrtex indicat. Costa 2 de BLAT i 3 de MINERAL, i el jugador pot tenir com a màxim 4 ciutats. En acabar comprova si el jugador ha guanyat.
 
-- `int calcularPunts(int idJugador)`: Calcula los puntos de victoria del jugador: 1 por cada poblado, 2 por cada ciudad, 1 por cada carta de puntos de victoria, y 2 por ejercito más grande. Devuelve el total.
+- `int calcularPunts(int idJugador)`: Calcula els punts de victòria del jugador: 1 per cada poblat, 2 per cada ciutat, 1 per cada carta de punt de victòria, i 2 per l'exèrcit més gran. Retorna el total.
 
-- `void construirPoblat(int idJugador, int idVertex)`: Construye un poblado en el vértice indicado. El vértice debe estar libre, sin asentamientos contiguos, y el máximo es de 5 poblados por jugador. Fuera de la preparación cuesta 1 de FUSTA, MAO, LLANA y BLAT, y requiere haber tirado los dados, no tener el ladrón pendiente y estar conectado a una carretera suya. En la preparación es gratis y solo se puede colocar uno por ronda, el segundo da 1 recurso por cada hexágono adyacente. Al terminar comprueba si el jugador ha ganado.
+- `void construirPoblat(int idJugador, int idVertex)`: Construeix un poblat al vèrtex indicat. El vèrtex ha d'estar lliure, sense assentaments contigus, i el màxim és de 5 poblats per jugador. Fora de la preparació costa 1 de FUSTA, MAO, LLANA i BLAT, i requereix haver tirat els daus, no tenir el lladre pendent i estar connectat a una carretera seva. A la preparació és gratis i només es pot col·locar un per ronda, el segon dóna 1 recurs per cada hexàgon adjacent. En acabar comprova si el jugador ha guanyat.
 
-- `void passarTorn(int idJugador)`: Pasa el turno al siguiente jugador. Debe ser el jugador activo, no tener el ladrón pendiente y haber tirado los dados (en EN_CURS). En la preparación debe haber colocado un poblado y una carretera, y el orden es de serpiente (1→n, n→1). Al terminar la preparación la partida pasa a EN_CURS. La ronda sube cuando el turno vuelve al jugador 1.
+- `void passarTorn(int idJugador)`: Passa el torn al jugador següent. Ha de ser el jugador actiu, no tenir el lladre pendent i haver tirat els daus (en EN_CURS). A la preparació ha d'haver col·locat un poblat i una carretera, i l'ordre és de serp (1→n, n→1). En acabar la preparació la partida passa a EN_CURS. La ronda puja quan el torn torna al jugador 1.
 
-- `void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima)`: Mueve el ladrón a otro hexágono cuando hay un movimiento pendiente (tras un 7 o un CAVALLER). Si se indica una víctima con un asentamiento en ese hexágono, se le roba 1 recurso aleatorio. Al terminar, el ladrón deja de estar pendiente.
+- `void moureLladre(int idJugador, int idHexagon, Integer idJugadorVictima)`: Mou el lladre a un altre hexàgon quan hi ha un moviment pendent (després d'un 7 o un CAVALLER). Si s'indica una víctima amb un assentament en aquest hexàgon, se li roba 1 recurs aleatori. En acabar, el lladre deixa d'estar pendent.
 
-## 3. Decisiones de implementación
+# 3. Decisions d'implementació
 
-- **Transacciones:** `calcularPunts` y `exercitMesGran` solo abren transacción si no hay una activa, para poder llamarse desde otros métodos. `comprovarVictoria` se llama después del commit del método que da puntos.
-- **millorarACiutat:** se borra el poblado, se hace `flush()` y luego se crea la ciudad, porque `vertex_id` es unique.
-- **Tablero:** `CarregadorTauler` carga hexágonos, vértices, aristas y hexagon_vertex desde los CSV, y baraja terrenos y números.
+- **Transaccions:** `calcularPunts` i `exercitMesGran` només obren transacció si no n'hi ha una d'activa, per poder cridar-se des d'altres mètodes. `comprovarVictoria` es crida després del commit del mètode que dóna punts.
+- **millorarACiutat:** s'esborra el poblat, es fa `flush()` i després es crea la ciutat, perquè `vertex_id` és unique.
+- **Tauler:** `CarregadorTauler` carrega hexàgons, vèrtexs, arestes i hexagon_vertex des dels CSV, i barreja terrenys i números.
