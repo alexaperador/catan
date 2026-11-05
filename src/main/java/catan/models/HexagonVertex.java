@@ -10,12 +10,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "HexagonVertex")
+@Table(name = "HexagonVertex", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "hexagon_id", "vertex_id" })
+})
 @NamedQuery(name = "HexagonVertex.assentamentsPerPartida", query = "SELECT hv.hexagon.id, a "
         + "FROM HexagonVertex hv, Assentament a "
         + "WHERE a.vertex = hv.vertex AND hv.hexagon.partida.id = :idPartida "

@@ -89,7 +89,12 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            Partida partida = obtenirPartida(session, idPartida);
+            Partida partida = session.get(Partida.class, idPartida);
+            if (partida == null) {
+                System.out.println("No existeix la partida: " + idPartida);
+                session.getTransaction().commit();
+                return;
+            }
 
             List<Hexagon> hexagons = session
                     .createNamedQuery("Hexagon.perPartida", Hexagon.class)
@@ -141,7 +146,12 @@ public class PartidaDao extends GenericDao<Partida, Integer> implements IPartida
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            Partida partida = obtenirPartida(session, idPartida);
+            Partida partida = session.get(Partida.class, idPartida);
+            if (partida == null) {
+                System.out.println("No existeix la partida: " + idPartida);
+                session.getTransaction().commit();
+                return;
+            }
 
             String actiu = (partida.getActiu() != null) ? partida.getActiu().getNom() : "cap";
             String tirada = (partida.getUltimaTirada() != null) ? String.valueOf(partida.getUltimaTirada()) : "cap";
