@@ -1,8 +1,8 @@
 ## Membres del grup
 
-- Badre
-- Erik
-- Alex Aperador Salcedo
+- Badreddine El Khammal
+- Erik Gamez
+- Alex Aperador
 
 # 1. Model de dades: relacions i per què s'han triat així
 
