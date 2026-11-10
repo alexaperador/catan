@@ -1,0 +1,8 @@
+catan\enums\ColorJugador.class
+catan\Main$1.class
+catan\dao\JugadorDao$1.class
+catan\dao\PartidaDao$1.class
+catan\enums\EstatPartida.class
+catan\enums\TipusCarta.class
+catan\enums\TipusTerreny.class
+catan\enums\TipusRecurs.class
