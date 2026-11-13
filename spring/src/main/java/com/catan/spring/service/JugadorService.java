@@ -2,6 +2,7 @@ package com.catan.spring.service;
 
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.catan.spring.repository.JugadorRepository;
@@ -24,7 +25,8 @@ public class JugadorService {
             jugador.passarTorn(idJugador);
             return ResponseEntity.ok("Torn passat correctament per al jugador amb ID: " + idJugador);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .header("Header-Customitzat", "Jugador no trobat amb id: " + idJugador).build();
         }
     }
 
