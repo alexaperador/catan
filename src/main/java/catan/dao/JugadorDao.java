@@ -912,7 +912,6 @@ public class JugadorDao extends GenericDao<Jugador, Integer> implements IJugador
                         .setParameter("idJugador", idJugadorVictima)
                         .getResultList();
 
-                // carta aleatoria de la víctima
                 int total = 0;
                 for (RecursJugador rj : recursosVictima) {
                     total += rj.getQuantitat();
