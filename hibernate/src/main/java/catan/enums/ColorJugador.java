@@ -1,4 +1,4 @@
-package catan.enums;
+package model;
 
 public enum ColorJugador {
     VERMELL, BLAU, BLANC, TARONJA

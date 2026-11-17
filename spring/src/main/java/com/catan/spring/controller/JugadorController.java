@@ -1,24 +1,20 @@
-package com.catan.spring.controller;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.catan.spring.service.JugadorService;
-
 @RestController
 @RequestMapping("/jugador")
 public class JugadorController {
     private final JugadorService service;
+    public JugadorController(JugadorService service) { this.service = service; }
 
-    JugadorController(JugadorService service) {
-        this.service = service;
+    @PostMapping("/{idJugador}/construir")
+    public String construir(@PathVariable int idJugador,
+                            @RequestParam String tipus,
+                            @RequestParam int posicio) {
+        try { return service.construir(idJugador, tipus, posicio); }
+        catch (ReglaException e) { return e.getMessage(); }
     }
 
-    @PostMapping(path = "/{idJugador}/passar")
-    public ResponseEntity<String> passarTorn(@PathVariable int idJugador) {
-        return service.passarTorn(idJugador);
+    @PostMapping("/{idJugador}/passar")
+    public String passar(@PathVariable int idJugador) {
+        try { return service.passarTorn(idJugador); }
+        catch (ReglaException e) { return e.getMessage(); }
     }
 }
