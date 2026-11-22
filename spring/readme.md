@@ -4,9 +4,7 @@
 - Erik Gamez
 - Alex Aperador
 
-# 1. Com s'executa
-
-## 1.1 Requisits
+## 1 Requisits
 
 - Java 21 o superior.
 - MySQL a `localhost:3306`. L'usuari i la contrasenya són a `src/main/resources/application.properties`. La BD `catan` es crea sola si no existeix (`createDatabaseIfNotExist=true`) i les taules les crea Hibernate (`ddl-auto=update`).
