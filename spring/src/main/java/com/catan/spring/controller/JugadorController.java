@@ -1,3 +1,5 @@
+package com.catan.spring.controller;
+
 @RestController
 @RequestMapping("/jugador")
 public class JugadorController {
