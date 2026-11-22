@@ -21,4 +21,6 @@ public class JugadorController {
     public ResponseEntity<String> passarTorn(@PathVariable int idJugador) {
         return service.passarTorn(idJugador);
     }
+
+    
 }
