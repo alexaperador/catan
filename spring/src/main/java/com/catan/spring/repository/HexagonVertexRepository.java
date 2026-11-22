@@ -11,7 +11,6 @@ import catan.models.HexagonVertex;
 
 public interface HexagonVertexRepository extends JpaRepository<HexagonVertex, Integer> {
 
-    /** Hexàgons que toquen un vèrtex (entre 1 i 3). */
     @Query("SELECT hv.hexagon FROM HexagonVertex hv WHERE hv.vertex.id = :idVertex")
     List<Hexagon> hexagonsDelVertex(@Param("idVertex") int idVertex);
 }

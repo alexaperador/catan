@@ -10,9 +10,7 @@ import catan.models.RecursJugador;
 
 public interface RecursJugadorRepository extends JpaRepository<RecursJugador, Integer> {
 
-    /** Fila de l'inventari d'un jugador per a un tipus de recurs. */
     Optional<RecursJugador> findByJugadorIdAndTipusRecurs(int idJugador, TipusRecurs tipusRecurs);
 
-    /** Inventari complet d'un jugador. */
     List<RecursJugador> findByJugadorIdOrderById(int idJugador);
 }

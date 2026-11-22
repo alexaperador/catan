@@ -7,6 +7,5 @@ import catan.models.CartaDesenvolupament;
 
 public interface CartaDesenvolupamentRepository extends JpaRepository<CartaDesenvolupament, Integer> {
 
-    /** Cartes d'un tipus a la mà d'un jugador (per comptar les PUNT_VICTORIA). */
     long countByMaIdAndTipusCarta(int idJugador, TipusCarta tipusCarta);
 }

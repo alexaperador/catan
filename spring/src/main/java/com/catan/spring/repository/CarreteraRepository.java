@@ -12,9 +12,9 @@ public interface CarreteraRepository extends JpaRepository<Carretera, Integer> {
 
     long countByPropietariId(int idJugador);
 
-    /** Carreteres del jugador que toquen algun dels vèrtexs indicats. */
     @Query("""
-        SELECT count(c) FROM Carretera c WHERE c.propietari.id = :j
-          AND (c.aresta.vertexA.id IN (:v1, :v2) OR c.aresta.vertexB.id IN (:v1, :v2))""")
+            SELECT count(c) FROM Carretera c WHERE c.propietari.id = :j
+              AND (c.aresta.vertexA.id IN (:v1, :v2) OR c.aresta.vertexB.id IN (:v1, :v2))
+            """)
     long carreteresPropiesTocant(@Param("j") int idJugador, @Param("v1") int v1, @Param("v2") int v2);
 }

@@ -6,10 +6,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * Converteix les excepcions dels serveis en respostes HTTP amb el missatge com a String,
- * així els controladors no han de repetir try/catch.
- */
 @RestControllerAdvice
 public class GestorErrors {
 

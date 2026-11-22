@@ -43,55 +43,43 @@ import catan.utils.CarregadorTauler;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-/**
- * Lògica de la partida: crear-la, mostrar el tauler, tirar els daus i calcular punts i victòria.
- * Tot passa per repositoris de Spring Data dins de transaccions de Spring.
- */
 @Service
 public class PartidaService {
 
-    private final Random random = new Random();
-
-    private final PartidaRepository partidaRepo;
-    private final JugadorRepository jugadorRepo;
-    private final RecursJugadorRepository recursRepo;
-    private final PoblatRepository poblatRepo;
-    private final CiutatRepository ciutatRepo;
-    private final CartaDesenvolupamentRepository cartaRepo;
+    private final PartidaRepository partidaRepository;
+    private final JugadorRepository jugadorRepository;
+    private final RecursJugadorRepository recursRepository;
+    private final PoblatRepository poblatRepository;
+    private final CiutatRepository ciutatRepository;
+    private final CartaDesenvolupamentRepository cartaRepository;
 
     @PersistenceContext
-    private EntityManager em;
+    private EntityManager entityManager;
 
-    public PartidaService(PartidaRepository partidaRepo, JugadorRepository jugadorRepo,
-            RecursJugadorRepository recursRepo, PoblatRepository poblatRepo, CiutatRepository ciutatRepo,
-            CartaDesenvolupamentRepository cartaRepo) {
-        this.partidaRepo = partidaRepo;
-        this.jugadorRepo = jugadorRepo;
-        this.recursRepo = recursRepo;
-        this.poblatRepo = poblatRepo;
-        this.ciutatRepo = ciutatRepo;
-        this.cartaRepo = cartaRepo;
+    public PartidaService(PartidaRepository partidaRepository, JugadorRepository jugadorRepository,
+            RecursJugadorRepository recursRepository, PoblatRepository poblatRepository,
+            CiutatRepository ciutatRepository,
+            CartaDesenvolupamentRepository cartaRepository) {
+        this.partidaRepository = partidaRepository;
+        this.jugadorRepository = jugadorRepository;
+        this.recursRepository = recursRepository;
+        this.poblatRepository = poblatRepository;
+        this.ciutatRepository = ciutatRepository;
+        this.cartaRepository = cartaRepository;
     }
 
     public Partida obtenirPartida(int idPartida) {
-        return partidaRepo.findById(idPartida)
+        return partidaRepository.findById(idPartida)
                 .orElseThrow(() -> new NoTrobatException("No existeix la partida " + idPartida));
     }
 
-    // ---------------------------------------------------------------- POST /partida
-
-    /**
-     * Crea una partida en PREPARACIO: jugadors amb ordre de torn aleatori (el color va
-     * segons l'ordre), inventari a 0, pila de cartes i tauler carregat dels CSV amb
-     * terrenys i números aleatoris. El lladre comença al desert.
-     */
     @Transactional
     public PartidaDto iniciarPartida(NovaPartidaRequest peticio) {
         Partida partida = new Partida();
         if (peticio.puntsPerGuanyar() != null) {
             partida.setPuntsPerGuanyar(peticio.puntsPerGuanyar());
         }
-        partidaRepo.save(partida);
+        partidaRepository.save(partida);
 
         List<String> noms = new ArrayList<>(peticio.jugadors());
         Collections.shuffle(noms);
@@ -101,7 +89,7 @@ public class PartidaService {
             for (TipusRecurs tipus : TipusRecurs.values()) {
                 jugador.getRecursos().add(new RecursJugador(jugador, tipus, 0));
             }
-            jugadorRepo.save(jugador);
+            jugadorRepository.save(jugador);
             partida.getJugadors().add(jugador);
         }
         partida.setActiu(partida.getJugadors().get(0));
@@ -110,124 +98,129 @@ public class PartidaService {
         crearCartes(partida, TipusCarta.PUNT_VICTORIA, 5);
         crearCartes(partida, TipusCarta.MONOPOLI, 2);
 
-        // Reutilitzem el carregador del projecte Hibernate amb la sessió de la transacció de Spring
-        Hexagon desert = CarregadorTauler.carregarTauler(em.unwrap(Session.class), partida);
+        // Necessitem la sessió de Hibernate per poder utilitzar
+        // CarregadorTauler.carregarTauler
+        // unwrap fa que l'EntityManager es converteixi en una sessió de Hibernate
+        Session sessio = entityManager.unwrap(Session.class);
+        Hexagon desert = CarregadorTauler.carregarTauler(sessio, partida);
         partida.setLladre(desert);
 
         List<HexagonDto> hexagons = new ArrayList<>();
-        for (Hexagon h : partidaRepo.hexagonsDePartida(partida.getId())) {
-            hexagons.add(new HexagonDto(h.getId(), h.getCodi(), h.getTerreny(), h.getNumero(),
-                    h.getId().equals(desert.getId()), List.of()));
+        for (Hexagon hexagon : partidaRepository.hexagonsDePartida(partida.getId())) {
+            hexagons.add(new HexagonDto(hexagon.getId(), hexagon.getCodi(), hexagon.getTerreny(), hexagon.getNumero(),
+                    hexagon.getId().equals(desert.getId()), List.of()));
         }
-        List<JugadorDto> jugadors = partida.getJugadors().stream().map(JugadorDto::de).toList();
+
+        List<JugadorDto> jugadors = new ArrayList<>();
+        for (Jugador jugador : partida.getJugadors()) {
+            jugadors.add(JugadorDto.convertirJugador(jugador));
+        }
 
         return new PartidaDto(partida.getId(), partida.getEstat(), partida.getRonda(),
-                partida.getPuntsPerGuanyar(), JugadorDto.de(partida.getActiu()), jugadors, hexagons);
+                partida.getPuntsPerGuanyar(), JugadorDto.convertirJugador(partida.getActiu()), jugadors, hexagons);
     }
 
     private void crearCartes(Partida partida, TipusCarta tipus, int quantitat) {
         for (int i = 0; i < quantitat; i++) {
-            cartaRepo.save(new CartaDesenvolupament(partida, tipus));
+            cartaRepository.save(new CartaDesenvolupament(partida, tipus));
         }
     }
 
-    // ---------------------------------------------------------- GET /partida/{id}/tauler
-
-    /** Hexàgons de la partida amb terreny, número, lladre i els poblats/ciutats dels seus vèrtexs. */
     @Transactional(readOnly = true)
     public List<HexagonDto> mostrarTauler(int idPartida) {
         Partida partida = obtenirPartida(idPartida);
         Integer idLladre = partida.getLladre() != null ? partida.getLladre().getId() : null;
 
         Map<Integer, List<ConstruccioDto>> perHexagon = new HashMap<>();
-        for (Object[] fila : partidaRepo.assentamentsPerHexagon(idPartida)) {
+
+        for (Object[] fila : partidaRepository.assentamentsPerHexagon(idPartida)) {
             Integer idHexagon = (Integer) fila[0];
-            Assentament a = (Assentament) fila[1];
-            String tipus = (a instanceof Ciutat) ? "CIUTAT" : "POBLAT";
-            perHexagon.computeIfAbsent(idHexagon, k -> new ArrayList<>())
-                    .add(new ConstruccioDto(a.getId(), tipus, a.getVertex().getId(), a.getVertex().getCodi(),
-                            JugadorDto.de(a.getPropietari())));
+            Assentament assentament = (Assentament) fila[1];
+            String tipus = (assentament instanceof Ciutat) ? "CIUTAT" : "POBLAT";
+            List<ConstruccioDto> construccions = perHexagon.get(idHexagon);
+
+            if (construccions == null) {
+                construccions = new ArrayList<>();
+                perHexagon.put(idHexagon, construccions);
+            }
+
+            construccions.add(new ConstruccioDto(assentament.getId(), tipus, assentament.getVertex().getId(),
+                    assentament.getVertex().getCodi(),
+                    JugadorDto.convertirJugador(assentament.getPropietari())));
         }
 
         List<HexagonDto> tauler = new ArrayList<>();
-        for (Hexagon h : partidaRepo.hexagonsDePartida(idPartida)) {
-            tauler.add(new HexagonDto(h.getId(), h.getCodi(), h.getTerreny(), h.getNumero(),
-                    h.getId().equals(idLladre), perHexagon.getOrDefault(h.getId(), List.of())));
+        for (Hexagon hexagon : partidaRepository.hexagonsDePartida(idPartida)) {
+            tauler.add(new HexagonDto(hexagon.getId(), hexagon.getCodi(), hexagon.getTerreny(), hexagon.getNumero(),
+                    hexagon.getId().equals(idLladre), perHexagon.getOrDefault(hexagon.getId(), List.of())));
         }
         return tauler;
     }
 
-    // ---------------------------------------------------------- POST /partida/{id}/daus
-
-    /**
-     * Tira 2 daus pel jugador actiu i reparteix la producció: 1 recurs per poblat i 2 per
-     * ciutat en cada hexàgon amb aquest número que no tingui el lladre.
-     * Amb un 7 no hi ha producció (el moviment del lladre no té endpoint a Spring).
-     */
     @Transactional
     public TiradaDto tirarDaus(int idPartida) {
         Partida partida = obtenirPartida(idPartida);
 
         if (partida.getEstat() == EstatPartida.FINALITZADA) {
-            throw new ReglaException("Partida no en curs: la partida ja ha finalitzat");
+            throw new ReglaException("La partida ja ha finalitzat");
         }
         if (partida.getEstat() != EstatPartida.EN_CURS) {
-            throw new ReglaException("Partida no en curs: encara s'està a la fase de PREPARACIO");
+            throw new ReglaException("Encara s'està a la fase de PREPARACIO");
         }
         if (partida.getDausTirats()) {
-            throw new ReglaException("Daus ja tirats: el jugador actiu ja ha tirat aquest torn");
+            throw new ReglaException("El jugador actiu ja ha tirat aquest torn");
         }
         if (partida.getLladrePendent()) {
-            throw new ReglaException("Lladre pendent: cal moure el lladre abans de continuar");
+            throw new ReglaException("Cal moure el lladre abans de continuar");
         }
+
+        Random random = new Random();
 
         int tirada = (random.nextInt(6) + 1) + (random.nextInt(6) + 1);
         partida.setUltimaTirada(tirada);
         partida.setDausTirats(true);
 
-        List<Jugador> jugadors = jugadorRepo.findByPartidaIdOrderByOrdreTorn(idPartida);
+        List<Jugador> jugadors = jugadorRepository.findByPartidaIdOrderByOrdreTorn(idPartida);
         Map<Integer, Map<TipusRecurs, Integer>> rebuts = new LinkedHashMap<>();
-        for (Jugador j : jugadors) {
-            rebuts.put(j.getId(), new EnumMap<>(TipusRecurs.class));
+        for (Jugador jugador : jugadors) {
+            rebuts.put(jugador.getId(), new EnumMap<>(TipusRecurs.class));
         }
 
         if (tirada != 7) {
             int idLladre = partida.getLladre() != null ? partida.getLladre().getId() : -1;
-            for (Object[] fila : partidaRepo.produccio(idPartida, tirada, idLladre)) {
+            for (Object[] fila : partidaRepository.produccio(idPartida, tirada, idLladre)) {
                 Hexagon hexagon = (Hexagon) fila[0];
                 Assentament assentament = (Assentament) fila[1];
                 TipusRecurs recurs = hexagon.getTerreny().getRecurs();
                 if (recurs == null) {
-                    continue; // el desert no té número, però per si de cas
+                    continue;
                 }
                 int quantitat = (assentament instanceof Ciutat) ? 2 : 1;
                 Jugador propietari = assentament.getPropietari();
                 afegirRecurs(propietari.getId(), recurs, quantitat);
-                rebuts.get(propietari.getId()).merge(recurs, quantitat, Integer::sum);
+                Map<TipusRecurs, Integer> recursosRebuts = rebuts.get(propietari.getId());
+                recursosRebuts.put(recurs, recursosRebuts.getOrDefault(recurs, 0) + quantitat);
             }
         }
 
         List<TiradaDto.RecursosRebuts> resum = new ArrayList<>();
-        for (Jugador j : jugadors) {
-            resum.add(new TiradaDto.RecursosRebuts(JugadorDto.de(j), rebuts.get(j.getId())));
+        for (Jugador jugador : jugadors) {
+            resum.add(new TiradaDto.RecursosRebuts(JugadorDto.convertirJugador(jugador), rebuts.get(jugador.getId())));
         }
-        return new TiradaDto(idPartida, tirada, JugadorDto.de(partida.getActiu()), resum);
+
+        return new TiradaDto(idPartida, tirada, JugadorDto.convertirJugador(partida.getActiu()), resum);
     }
 
-    /** Suma (o resta, si quantitat és negativa) recursos a l'inventari d'un jugador. */
     public void afegirRecurs(int idJugador, TipusRecurs tipus, int quantitat) {
-        RecursJugador rj = recursRepo.findByJugadorIdAndTipusRecurs(idJugador, tipus)
+        RecursJugador recursJugador = recursRepository.findByJugadorIdAndTipusRecurs(idJugador, tipus)
                 .orElseThrow(() -> new IllegalStateException("Inventari incomplet del jugador " + idJugador));
-        rj.setQuantitat(rj.getQuantitat() + quantitat);
+        recursJugador.setQuantitat(recursJugador.getQuantitat() + quantitat);
     }
 
-    // ------------------------------------------------------------- Punts i victòria
-
-    /** Punts de victòria: poblats (1), ciutats (2), cartes PUNT_VICTORIA (1) i exèrcit més gran (2). */
     public int calcularPunts(Jugador jugador) {
-        long punts = poblatRepo.countByPropietariId(jugador.getId())
-                + 2 * ciutatRepo.countByPropietariId(jugador.getId())
-                + cartaRepo.countByMaIdAndTipusCarta(jugador.getId(), TipusCarta.PUNT_VICTORIA);
+        long punts = poblatRepository.countByPropietariId(jugador.getId())
+                + 2 * ciutatRepository.countByPropietariId(jugador.getId())
+                + cartaRepository.countByMaIdAndTipusCarta(jugador.getId(), TipusCarta.PUNT_VICTORIA);
         Jugador exercit = exercitMesGran(jugador.getPartida().getId());
         if (exercit != null && exercit.getId().equals(jugador.getId())) {
             punts += 2;
@@ -235,15 +228,14 @@ public class PartidaService {
         return (int) punts;
     }
 
-    /** Jugador amb més cavallers jugats (mínim 3 i sense empat), o null. */
     public Jugador exercitMesGran(int idPartida) {
         Jugador millor = null;
         boolean empat = false;
-        for (Jugador j : jugadorRepo.findByPartidaIdOrderByOrdreTorn(idPartida)) {
-            if (millor == null || j.getCavallersJugats() > millor.getCavallersJugats()) {
-                millor = j;
+        for (Jugador jugador : jugadorRepository.findByPartidaIdOrderByOrdreTorn(idPartida)) {
+            if (millor == null || jugador.getCavallersJugats() > millor.getCavallersJugats()) {
+                millor = jugador;
                 empat = false;
-            } else if (j.getCavallersJugats() == millor.getCavallersJugats()) {
+            } else if (jugador.getCavallersJugats() == millor.getCavallersJugats()) {
                 empat = true;
             }
         }
@@ -253,15 +245,14 @@ public class PartidaService {
         return millor;
     }
 
-    /** Si algun jugador arriba als punts per guanyar, la partida passa a FINALITZADA. */
     public void comprovarVictoria(Partida partida) {
         if (partida.getEstat() == EstatPartida.FINALITZADA) {
             return;
         }
-        for (Jugador j : jugadorRepo.findByPartidaIdOrderByOrdreTorn(partida.getId())) {
-            if (calcularPunts(j) >= partida.getPuntsPerGuanyar()) {
+        for (Jugador jugador : jugadorRepository.findByPartidaIdOrderByOrdreTorn(partida.getId())) {
+            if (calcularPunts(jugador) >= partida.getPuntsPerGuanyar()) {
                 partida.setEstat(EstatPartida.FINALITZADA);
-                partida.setGuanyador(j);
+                partida.setGuanyador(jugador);
                 return;
             }
         }
