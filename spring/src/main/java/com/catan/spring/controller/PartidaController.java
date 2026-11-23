@@ -19,10 +19,6 @@ import com.catan.spring.service.PartidaService;
 
 import jakarta.validation.Valid;
 
-/**
- * Endpoints de partida. Els errors (partida inexistent, regles) els converteix
- * GestorErrors en 404 / 400 amb el missatge.
- */
 @RestController
 @RequestMapping("/partida")
 public class PartidaController {
@@ -33,29 +29,16 @@ public class PartidaController {
         this.service = service;
     }
 
-    /**
-     * POST /partida cos: {"jugadors": ["Badre", "Erik", "Alex"], "puntsPerGuanyar": 10}
-     * Inicia una nova partida amb els jugadors i punts per guanyar indicats.
-     * Retorna un JSON amb la partida creada.
-     */
     @PostMapping
     public ResponseEntity<PartidaDto> iniciarPartida(@Valid @RequestBody NovaPartidaRequest peticio) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.iniciarPartida(peticio));
     }
 
-    /**
-     * GET /partida/{idPartida}/tauler
-     * Torna un array JSON amb els hexàgons.
-     */
     @GetMapping("/{idPartida}/tauler")
     public ResponseEntity<List<HexagonDto>> mostrarTauler(@PathVariable int idPartida) {
         return ResponseEntity.ok(service.mostrarTauler(idPartida));
     }
 
-    /**
-     * POST /partida/{idPartida}/daus
-     * tira els daus i retorna un JSON amb el resum de la tirada.
-     */
     @PostMapping("/{idPartida}/daus")
     public ResponseEntity<TiradaDto> tirarDaus(@PathVariable int idPartida) {
         return ResponseEntity.ok(service.tirarDaus(idPartida));

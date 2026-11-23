@@ -98,9 +98,6 @@ public class PartidaService {
         crearCartes(partida, TipusCarta.PUNT_VICTORIA, 5);
         crearCartes(partida, TipusCarta.MONOPOLI, 2);
 
-        // Necessitem la sessió de Hibernate per poder utilitzar
-        // CarregadorTauler.carregarTauler
-        // unwrap fa que l'EntityManager es converteixi en una sessió de Hibernate
         Session sessio = entityManager.unwrap(Session.class);
         Hexagon desert = CarregadorTauler.carregarTauler(sessio, partida);
         partida.setLladre(desert);

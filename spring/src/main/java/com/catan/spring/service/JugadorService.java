@@ -91,6 +91,9 @@ public class JugadorService {
         Jugador jugador = obtenirJugador(idJugador);
         Partida partida = jugador.getPartida();
 
+        if (partida.getEstat() != EstatPartida.PREPARACIO && partida.getEstat() != EstatPartida.EN_CURS) {
+            throw new ReglaException("La partida no està en curs");
+        }
         validarTorn(jugador, partida);
 
         return switch (tipus.trim().toUpperCase()) {
@@ -148,11 +151,11 @@ public class JugadorService {
             }
         } else if (assentamentRepository.assentamentsPropisEn(idJugador, vertexA, vertexB) == 0
                 && carreteraRepository.carreteresPropiesTocant(idJugador, vertexA, vertexB) == 0) {
-            throw new ReglaException("La carretera ha de tocar un poblat, ciutat o carretera teva");
+            throw new ReglaException("Carretera no connectada: ha de tocar un poblat, ciutat o carretera teva");
         }
 
         if (carreteres >= MAX_CARRETERES) {
-            throw new ReglaException("Ja tens " + MAX_CARRETERES + " carreteres");
+            throw new ReglaException("Límit assolit: ja tens " + MAX_CARRETERES + " carreteres");
         }
         if (!preparacio) {
             cobrar(idJugador, Map.of(TipusRecurs.FUSTA, 1, TipusRecurs.MAO, 1));
@@ -184,7 +187,7 @@ public class JugadorService {
         }
 
         if (poblatRepository.countByPropietariId(idJugador) >= MAX_POBLATS) {
-            throw new ReglaException("Ja tens " + MAX_POBLATS + " poblats");
+            throw new ReglaException("Límit assolit: ja tens " + MAX_POBLATS + " poblats");
         }
         if (!preparacio) {
             cobrar(idJugador,
@@ -208,7 +211,7 @@ public class JugadorService {
 
     private String millorarACiutat(Jugador jugador, Partida partida, int idVertex) {
         if (partida.getEstat() != EstatPartida.EN_CURS) {
-            throw new ReglaException("Les ciutats no es poden construir a la PREPARACIO");
+            throw new ReglaException("La partida no està en curs: les ciutats no es poden construir a la PREPARACIO");
         }
         obtenirVertex(partida, idVertex);
         int idJugador = jugador.getId();
@@ -216,14 +219,14 @@ public class JugadorService {
                 .orElseThrow(() -> new ReglaException("No hi ha cap poblat teu per millorar en aquest vèrtex"));
 
         if (ciutatRepository.countByPropietariId(idJugador) >= MAX_CIUTATS) {
-            throw new ReglaException("Ja tens " + MAX_CIUTATS + " ciutats");
+            throw new ReglaException("Límit assolit: ja tens " + MAX_CIUTATS + " ciutats");
         }
 
         cobrar(idJugador, Map.of(TipusRecurs.BLAT, 2, TipusRecurs.MINERAL, 3));
 
         Vertex vertexPoblat = poblat.getVertex();
         poblatRepository.delete(poblat);
-        poblatRepository.flush(); // vertex_id és únic a Assentament: cal esborrar el poblat abans d'inserir la ciutat
+        poblatRepository.flush();
         ciutatRepository.save(new Ciutat(jugador, vertexPoblat));
 
         partidaService.comprovarVictoria(partida);
@@ -264,8 +267,8 @@ public class JugadorService {
         Jugador jugador = obtenirJugador(idJugador);
         Partida partida = jugador.getPartida();
 
-        if (partida.getEstat() == EstatPartida.FINALITZADA) {
-            throw new ReglaException("La partida ja ha finalitzat");
+        if (partida.getEstat() != EstatPartida.PREPARACIO && partida.getEstat() != EstatPartida.EN_CURS) {
+            throw new ReglaException("La partida no està en curs");
         }
         if (partida.getActiu() == null || !partida.getActiu().getId().equals(jugador.getId())) {
             throw new ReglaException("No és el teu torn");
@@ -321,5 +324,23 @@ public class JugadorService {
         partida.setDausTirats(false);
         return "Torn passat." + extra + " Ara juga " + nouActiu.getNom()
                 + " (ronda " + partida.getRonda() + ", " + partida.getEstat() + ")";
+    }
+
+    @Transactional
+    public String construirResultat(int idJugador, String tipus, int posicio) {
+        try {
+            return construir(idJugador, tipus, posicio);
+        } catch (ReglaException e) {
+            return e.getMessage();
+        }
+    }
+
+    @Transactional
+    public String passarTornResultat(int idJugador) {
+        try {
+            return passarTorn(idJugador);
+        } catch (ReglaException e) {
+            return e.getMessage();
+        }
     }
 }
