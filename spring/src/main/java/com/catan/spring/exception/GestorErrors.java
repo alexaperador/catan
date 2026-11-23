@@ -21,9 +21,6 @@ public class GestorErrors {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> validacio(MethodArgumentNotValidException e) {
-        String missatge = e.getBindingResult().getFieldErrors().stream()
-                .map(f -> f.getField() + ": " + f.getDefaultMessage())
-                .findFirst().orElse("Petició no vàlida");
-        return ResponseEntity.badRequest().body(missatge);
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
 }
