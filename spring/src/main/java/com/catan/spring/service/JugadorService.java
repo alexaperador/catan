@@ -165,10 +165,10 @@ public class JugadorService {
     private String construirPoblat(Jugador jugador, Partida partida, int idVertex) {
         Vertex vertex = obtenirVertex(partida, idVertex);
         if (assentamentRepository.existsByVertexId(idVertex)) {
-            throw new ReglaException("Posició ocupada: ja hi ha un assentament en aquest vèrtex");
+            throw new ReglaException("Ja hi ha un assentament en aquest vèrtex");
         }
         if (assentamentRepository.assentamentsAdjacents(idVertex) > 0) {
-            throw new ReglaException("Regla de la distància: hi ha un assentament en un vèrtex adjacent");
+            throw new ReglaException("Hi ha un assentament en un vèrtex adjacent");
         }
 
         int idJugador = jugador.getId();
@@ -223,7 +223,6 @@ public class JugadorService {
 
         Vertex vertexPoblat = poblat.getVertex();
         poblatRepository.delete(poblat);
-        poblatRepository.flush(); // vertex_id és únic a Assentament: cal esborrar el poblat abans d'inserir la ciutat
         ciutatRepository.save(new Ciutat(jugador, vertexPoblat));
 
         partidaService.comprovarVictoria(partida);
@@ -232,7 +231,7 @@ public class JugadorService {
 
     private Vertex obtenirVertex(Partida partida, int idVertex) {
         Vertex vertex = vertexRepository.findById(idVertex)
-                .orElseThrow(() -> new ReglaException("Posició inexistent: no hi ha cap vèrtex " + idVertex));
+                .orElseThrow(() -> new ReglaException("No hi ha cap vèrtex " + idVertex));
         if (!vertex.getPartida().getId().equals(partida.getId())) {
             throw new ReglaException("Posició d'una altra partida");
         }
@@ -241,8 +240,8 @@ public class JugadorService {
 
     private void cobrar(int idJugador, Map<TipusRecurs, Integer> cost) {
         for (Map.Entry<TipusRecurs, Integer> costEntry : cost.entrySet()) {
-            int tinc = recursRepository.findByJugadorIdAndTipusRecurs(idJugador, costEntry.getKey())
-                    .map(recursJugador -> recursJugador.getQuantitat()).orElse(0);
+            Optional<RecursJugador> recurs = recursRepository.findByJugadorIdAndTipusRecurs(idJugador, costEntry.getKey());
+            int tinc = recurs.isPresent() ? recurs.get().getQuantitat() : 0;
             if (tinc < costEntry.getValue()) {
                 throw new ReglaException("No tens suficients recursos");
             }
