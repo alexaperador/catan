@@ -98,8 +98,7 @@ public class PartidaService {
         crearCartes(partida, TipusCarta.PUNT_VICTORIA, 5);
         crearCartes(partida, TipusCarta.MONOPOLI, 2);
 
-        // Necessitem la sessió de Hibernate per poder utilitzar
-        // CarregadorTauler.carregarTauler
+        // Necessitem la sessió de Hibernate per poder utilitzar CarregadorTauler.carregarTauler
         // unwrap fa que l'EntityManager es converteixi en una sessió de Hibernate
         Session sessio = entityManager.unwrap(Session.class);
         Hexagon desert = CarregadorTauler.carregarTauler(sessio, partida);
@@ -152,7 +151,7 @@ public class PartidaService {
         List<HexagonDto> tauler = new ArrayList<>();
         for (Hexagon hexagon : partidaRepository.hexagonsDePartida(idPartida)) {
             tauler.add(new HexagonDto(hexagon.getId(), hexagon.getCodi(), hexagon.getTerreny(), hexagon.getNumero(),
-                    hexagon.getId().equals(idLladre), perHexagon.getOrDefault(hexagon.getId(), List.of())));
+                    hexagon.getId().equals(idLladre), perHexagon.get(hexagon.getId())));
         }
         return tauler;
     }
